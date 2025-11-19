@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Optimization Test Page</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            background: #ffc107;
+            color: #000;
+        }
+        .status-success {
+            background: #28a745;
+            color: white;
+        }
+        .status-error {
+            background: #dc3545;
+            color: white;
+        }
+        .test-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #e0e0e0;
+        }
+        .test-item h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .config-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .config-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+        }
+        .config-item.configured {
+            border-color: #28a745;
+        }
+        .config-item h4 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .config-item p {
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Optimization Test Page</h1>
+        <p class="subtitle">Test DeepSeek and Kimi AI integrations</p>
+
+        <!-- Configuration Status -->
+        <div class="info-box">
+            <h3>📋 Configuration Status</h3>
+            <div class="config-status">
+                <div class="config-item" id="deepseek-status">
+                    <h4>DeepSeek AI</h4>
+                    <p id="deepseek-text">Checking...</p>
+                </div>
+                <div class="config-item" id="kimi-status">
+                    <h4>Kimi AI (Moonshot)</h4>
+                    <p id="kimi-text">Checking...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Individual Tests -->
+        <div class="test-section">
+            <h2>
+                <span>Individual Feature Tests</span>
+                <span class="status-badge status-pending">Ready</span>
+            </h2>
+
+            <div class="test-item">
+                <h3>1. Optimize Product Title</h3>
+                <p><strong>Service:</strong> DeepSeek AI</p>
+                <button onclick="testOptimizeTitle()">Test Title Optimization</button>
+                <div id="title-result" class="result-box" style="display:none;"></div>
+            </div>
+
+            <div class="test-item">
+                <h3>2. Optimize Description</h3>
+                <p><strong>Service:</strong> DeepSeek AI</p>
+                <button onclick="testOptimizeDescription()">Test Description Optimization</button>
+                <div id="description-result" class="result-box" style="display:none;"></div>
+            </div>
+
+            <div class="test-item">
+                <h3>3. Generate Short Description</h3>
+                <p><strong>Service:</strong> Kimi AI</p>
+                <button onclick="testShortDescription()">Test Short Description</button>
+                <div id="short-result" class="result-box" style="display:none;"></div>
+            </div>
+
+            <div class="test-item">
+                <h3>4. Generate SEO Keywords</h3>
+                <p><strong>Service:</strong> Kimi AI</p>
+                <button onclick="testKeywords()">Test Keyword Generation</button>
+                <div id="keywords-result" class="result-box" style="display:none;"></div>
+            </div>
+
+            <div class="test-item">
+                <h3>5. Extract Selling Points</h3>
+                <p><strong>Service:</strong> DeepSeek AI</p>
+                <button onclick="testSellingPoints()">Test Selling Points</button>
+                <div id="selling-result" class="result-box" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Full Optimization Test -->
+        <div class="test-section">
+            <h2>
+                <span>Full Optimization Test</span>
+                <span class="status-badge status-pending">Ready</span>
+            </h2>
+
+            <div class="test-item">
+                <h3>🚀 Complete Product Optimization</h3>
+                <p><strong>Services:</strong> DeepSeek AI + Kimi AI</p>
+                <p style="margin-top: 5px; color: #666;">Tests all features together</p>
+                <button onclick="testFullOptimization()" style="margin-top: 10px;">Run Full Optimization</button>
+                <div id="full-result" class="result-box" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- API Endpoint Test -->
+        <div class="test-section">
+            <h2>
+                <span>API Endpoint Test</span>
+                <span class="status-badge status-pending">Ready</span>
+            </h2>
+
+            <div class="test-item">
+                <h3>Direct API Call</h3>
+                <p>Test the ai_optimize.php endpoint directly</p>
+                <button onclick="testAPIEndpoint()">Test Endpoint</button>
+                <div id="api-result" class="result-box" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample product data for testing
+        const sampleProduct = {
+            name: 'Industrial UV Flatbed Printer',
+            description: 'High quality printer for commercial use. Prints on various materials.',
+            category: 'Industrial Equipment',
+            specifications: 'Print Resolution: 1440 DPI\nPrint Size: 2000x3000mm\nPrint Speed: 20 sqm/hour'
+        };
+
+        // Check configuration on load
+        window.onload = async function() {
+            await checkConfiguration();
+        };
+
+        async function checkConfiguration() {
+            try {
+                const response = await fetch('ai_optimize.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'check_config',
+                        product_data: sampleProduct
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Update DeepSeek status
+                const deepseekStatus = document.getElementById('deepseek-status');
+                const deepseekText = document.getElementById('deepseek-text');
+                if (data.deepseek_configured) {
+                    deepseekStatus.classList.add('configured');
+                    deepseekText.innerHTML = '✅ Configured (Production Mode)';
+                } else {
+                    deepseekText.innerHTML = '⚠️ Demo Mode (No API Key)';
+                }
+
+                // Update Kimi status
+                const kimiStatus = document.getElementById('kimi-status');
+                const kimiText = document.getElementById('kimi-text');
+                if (data.kimi_configured) {
+                    kimiStatus.classList.add('configured');
+                    kimiText.innerHTML = '✅ Configured (Production Mode)';
+                } else {
+                    kimiText.innerHTML = '⚠️ Demo Mode (No API Key)';
+                }
+            } catch (error) {
+                console.error('Configuration check failed:', error);
+            }
+        }
+
+        async function testOptimizeTitle() {
+            await runTest('optimize_title', 'title-result', sampleProduct);
+        }
+
+        async function testOptimizeDescription() {
+            await runTest('optimize_description', 'description-result', sampleProduct);
+        }
+
+        async function testShortDescription() {
+            await runTest('generate_short_description', 'short-result', sampleProduct);
+        }
+
+        async function testKeywords() {
+            await runTest('generate_keywords', 'keywords-result', sampleProduct);
+        }
+
+        async function testSellingPoints() {
+            await runTest('extract_selling_points', 'selling-result', sampleProduct);
+        }
+
+        async function testFullOptimization() {
+            await runTest('full_optimization', 'full-result', sampleProduct);
+        }
+
+        async function testAPIEndpoint() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading"></div> Testing endpoint...';
+
+            try {
+                const response = await fetch('ai_optimize.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'optimize_title',
+                        product_data: sampleProduct
+                    })
+                });
+
+                const data = await response.json();
+                resultDiv.innerHTML = `<strong>Success!</strong><br><br>${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<strong style="color: #dc3545;">Error:</strong><br>${error.message}`;
+            }
+        }
+
+        async function runTest(action, resultDivId, productData) {
+            const resultDiv = document.getElementById(resultDivId);
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading"></div> Processing...';
+
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('ai_optimize.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: action,
+                        product_data: productData
+                    })
+                });
+
+                const data = await response.json();
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                if (data.success) {
+                    let resultHTML = `<strong style="color: #28a745;">✅ Success!</strong> (${duration}s)<br><br>`;
+                    
+                    if (data.data) {
+                        if (typeof data.data === 'string') {
+                            resultHTML += `<strong>Result:</strong><br>${data.data}`;
+                        } else if (Array.isArray(data.data)) {
+                            resultHTML += `<strong>Results:</strong><br>`;
+                            data.data.forEach((item, index) => {
+                                resultHTML += `${index + 1}. ${item}<br>`;
+                            });
+                        } else {
+                            resultHTML += `<strong>Result:</strong><br>${JSON.stringify(data.data, null, 2)}`;
+                        }
+                    }
+
+                    if (data.mode) {
+                        resultHTML += `<br><br><strong>Mode:</strong> ${data.mode}`;
+                    }
+
+                    resultDiv.innerHTML = resultHTML;
+                } else {
+                    resultDiv.innerHTML = `<strong style="color: #dc3545;">❌ Error:</strong><br>${data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+                resultDiv.innerHTML = `<strong style="color: #dc3545;">❌ Request Failed (${duration}s):</strong><br>${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

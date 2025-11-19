@@ -1,0 +1,46 @@
+# AI Configuration (contains sensitive API keys)
+admin/includes/ai_config.php
+
+# Database configuration (if exists)
+config.php
+db_config.php
+database.php
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Vendor directories
+vendor/
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+
+# Upload directories (may contain sensitive content)
+uploads/temp/
+uploads/cache/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# API keys and secrets
+secrets.php
+keys.php
+credentials.php

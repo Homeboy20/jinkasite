@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Disallow admin areas and sensitive directories
+Disallow: /admin/
+Disallow: /database/
+Disallow: /includes/
+Disallow: /vendor/
+
+# Disallow cache and temp files
+Disallow: /cache/
+Disallow: /tmp/
+Disallow: /*.log$
+
+# Allow important pages and assets
+Allow: /products.php
+Allow: /contact.php
+Allow: /about.php
+Allow: /css/
+Allow: /js/
+Allow: /images/
+
+# Sitemap (update with your actual domain)
+Sitemap: https://yourwebsite.com/sitemap.xml
