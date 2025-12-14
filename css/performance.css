@@ -1,0 +1,166 @@
+/* Performance Optimizations CSS */
+
+/* Lazy Loading Placeholder */
+img.lazy {
+    opacity: 0;
+    transition: opacity 0.3s ease-in;
+}
+
+img.lazy-loaded {
+    opacity: 1;
+}
+
+/* Blur-up effect for images */
+img[data-src] {
+    filter: blur(10px);
+    transition: filter 0.3s ease-in;
+}
+
+img.lazy-loaded {
+    filter: blur(0);
+}
+
+/* Loading spinner for lazy images */
+.img-loading {
+    position: relative;
+    background: #f0f0f0;
+}
+
+.img-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Optimize font loading */
+@font-face {
+    font-family: 'System';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+}
+
+/* Reduce layout shift */
+img, video, iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Aspect ratio boxes to prevent CLS */
+.aspect-ratio-box {
+    position: relative;
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+}
+
+.aspect-ratio-box--16-9 {
+    padding-bottom: 56.25%; /* 16:9 */
+}
+
+.aspect-ratio-box--4-3 {
+    padding-bottom: 75%; /* 4:3 */
+}
+
+.aspect-ratio-box--1-1 {
+    padding-bottom: 100%; /* 1:1 */
+}
+
+.aspect-ratio-box > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Hardware acceleration for animations */
+.hw-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Optimize will-change */
+.animate-on-scroll {
+    will-change: transform, opacity;
+}
+
+.animate-on-scroll.in-view {
+    will-change: auto;
+}
+
+/* Critical CSS inline - Above the fold */
+.hero-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Defer non-critical CSS */
+.non-critical {
+    /* Styles loaded after page render */
+}
+
+/* WebP support detection */
+.webp .bg-image {
+    background-image: url('image.webp');
+}
+
+.no-webp .bg-image {
+    background-image: url('image.jpg');
+}
+
+/* Loading states */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Optimize repaints */
+.no-repaint {
+    contain: layout style paint;
+}
+
+/* GPU acceleration for transforms */
+.gpu-accelerate {
+    transform: translate3d(0, 0, 0);
+}

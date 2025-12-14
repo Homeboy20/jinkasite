@@ -20,5 +20,8 @@ Allow: /css/
 Allow: /js/
 Allow: /images/
 
-# Sitemap (update with your actual domain)
-Sitemap: https://yourwebsite.com/sitemap.xml
+# Sitemap (dynamic XML sitemap)
+Sitemap: https://yourwebsite.com/sitemap.xml.php
+
+# Alternative for development
+# Sitemap: http://localhost/jinkaplotterwebsite/sitemap.xml.php

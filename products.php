@@ -198,6 +198,8 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
     <link rel="icon" href="<?php echo htmlspecialchars($site_favicon); ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/header-modern.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/theme-variables.php?v=<?php echo time(); ?>">>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -233,13 +235,13 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .breadcrumb-list a {
-            color: #2563eb;
+            color: #ff5900;
             text-decoration: none;
             transition: all 0.2s;
         }
 
         .breadcrumb-list a:hover {
-            color: #1d4ed8;
+            color: #e64f00;
             text-decoration: underline;
         }
 
@@ -257,7 +259,7 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
             text-align: center;
             margin-bottom: 3rem;
             padding: 3rem 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ff5900;
             color: white;
             border-radius: 16px;
         }
@@ -305,8 +307,8 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
 
         .search-box input:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            border-color: #ff5900;
+            box-shadow: 0 0 0 3px rgba(255, 89, 0, 0.1);
         }
 
         .filter-group {
@@ -334,8 +336,8 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
 
         .filter-group select:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            border-color: #ff5900;
+            box-shadow: 0 0 0 3px rgba(255, 89, 0, 0.1);
         }
 
         .results-info {
@@ -367,8 +369,8 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
 
         .view-btn.active,
         .view-btn:hover {
-            border-color: #2563eb;
-            background: #eff6ff;
+            border-color: #ff5900;
+            background: #ffedd5;
         }
 
         .no-products {
@@ -566,13 +568,12 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
 
                             <div class="product-pricing">
                                 <div class="price-row">
+                                    <?php
+                                    $currency = $currencyDetector->getCurrentCurrency();
+                                    $price = $currencyDetector->getPrice($product['price_kes']);
+                                    ?>
                                     <div class="price">
-                                        <span class="currency">KES</span>
-                                        <?php echo number_format($product['price_kes'], 0); ?>
-                                    </div>
-                                    <div class="price-secondary">
-                                        <span class="currency">TZS</span>
-                                        <?php echo number_format($product['price_tzs'], 0); ?>
+                                        <?php echo $currencyDetector->formatPrice($price); ?>
                                     </div>
                                 </div>
 
@@ -611,45 +612,111 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
+    <!-- Feature Comparison Section -->
+    <section style="padding: 5rem 0; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-col">
-                    <h3>ProCut Solutions</h3>
-                    <p>Professional printing equipment supplier serving Kenya and Tanzania. Quality products, expert support, and competitive pricing.</p>
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <span style="display: inline-block; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); color: white; padding: 0.5rem 1.25rem; border-radius: 50px; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                    ⚡ Superior Performance
+                </span>
+                <h2 style="font-size: 2.5rem; font-weight: 800; color: #1e293b; margin-bottom: 1rem;">
+                    What Makes Our Plotters Better?
+                </h2>
+                <p style="font-size: 1.125rem; color: #64748b; max-width: 700px; margin: 0 auto;">
+                    Professional-grade features that deliver exceptional results
+                </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+                <!-- Feature 1 -->
+                <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px -10px rgba(255,89,0,0.2)'; this.style.borderColor='#ff5900';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px -10px rgba(0,0,0,0.1)'; this.style.borderColor='#f1f5f9';">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                        <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M13 10h-2V8h2m0 6h-2v-2h2m-1-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/></svg>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">High-Speed Precision</h3>
+                    <p style="color: #64748b; line-height: 1.6; margin-bottom: 1rem;">Cut at speeds up to 1200mm/s without sacrificing accuracy. 50% faster than standard plotters.</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981; font-weight: 600;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Up to 1200mm/s speed
+                    </div>
                 </div>
-                <div class="footer-col">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="products.php">Products</a></li>
-                        <li><a href="index.php#contact">Contact</a></li>
-                    </ul>
+
+                <!-- Feature 2 -->
+                <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px -10px rgba(255,89,0,0.2)'; this.style.borderColor='#ff5900';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px -10px rgba(0,0,0,0.1)'; this.style.borderColor='#f1f5f9';">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                        <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Versatile Material Handling</h3>
+                    <p style="color: #64748b; line-height: 1.6; margin-bottom: 1rem;">Cut through vinyl, paper, cardstock, sandblast resist, heat transfer, and more with 600g force.</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981; font-weight: 600;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        600g cutting force
+                    </div>
                 </div>
-                <div class="footer-col">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li>Tanzania: <a href="tel:+255753098911">+255 753 098 911</a></li>
-                        <li>Kenya: <a href="tel:+254716522828">+254 716 522 828</a></li>
-                        <li><a href="mailto:support@procutsolutions.com">support@procutsolutions.com</a></li>
-                    </ul>
+
+                <!-- Feature 3 -->
+                <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px -10px rgba(255,89,0,0.2)'; this.style.borderColor='#ff5900';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px -10px rgba(0,0,0,0.1)'; this.style.borderColor='#f1f5f9';">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                        <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Wide Format Capability</h3>
+                    <p style="color: #64748b; line-height: 1.6; margin-bottom: 1rem;">1350mm cutting width handles large projects. Perfect for vehicle wraps and signage.</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981; font-weight: 600;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        1350mm width
+                    </div>
                 </div>
-                <div class="footer-col">
-                    <h4>Business Hours</h4>
-                    <ul>
-                        <li>Monday - Friday: 8am - 6pm</li>
-                        <li>Saturday: 9am - 4pm</li>
-                        <li>Sunday: Closed</li>
-                        <li>WhatsApp: 24/7</li>
-                    </ul>
+
+                <!-- Feature 4 -->
+                <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px -10px rgba(255,89,0,0.2)'; this.style.borderColor='#ff5900';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px -10px rgba(0,0,0,0.1)'; this.style.borderColor='#f1f5f9';">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                        <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Advanced Sensor System</h3>
+                    <p style="color: #64748b; line-height: 1.6; margin-bottom: 1rem;">Optical sensors automatically detect registration marks for perfect contour cutting every time.</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981; font-weight: 600;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Automatic alignment
+                    </div>
+                </div>
+
+                <!-- Feature 5 -->
+                <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px -10px rgba(255,89,0,0.2)'; this.style.borderColor='#ff5900';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px -10px rgba(0,0,0,0.1)'; this.style.borderColor='#f1f5f9';">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                        <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Complete Package</h3>
+                    <p style="color: #64748b; line-height: 1.6; margin-bottom: 1rem;">Free installation, comprehensive training, and 24/7 support. Everything you need to succeed.</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981; font-weight: 600;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Full support included
+                    </div>
+                </div>
+
+                <!-- Feature 6 -->
+                <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px -10px rgba(255,89,0,0.2)'; this.style.borderColor='#ff5900';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px -10px rgba(0,0,0,0.1)'; this.style.borderColor='#f1f5f9';">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                        <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Built to Last</h3>
+                    <p style="color: #64748b; line-height: 1.6; margin-bottom: 1rem;">Industrial-grade components with 12-month warranty. Reliable performance for years of production.</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981; font-weight: 600;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        12-month warranty
+                    </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> ProCut Solutions. All rights reserved.</p>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="#contact" style="display: inline-flex; align-items: center; gap: 0.75rem; background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%); color: white; padding: 1rem 2rem; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 1.125rem; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 10px 30px -10px rgba(255, 89, 0, 0.4);">
+                    Get Your Plotter Today
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/></svg>
+                </a>
             </div>
         </div>
-    </footer>
+    </section>
+
+    <?php include 'includes/footer.php'; ?>
 
     <script>
         // Add to Cart functionality
@@ -742,3 +809,4 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
     </script>
 </body>
 </html>
+

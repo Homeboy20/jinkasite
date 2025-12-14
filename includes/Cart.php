@@ -16,6 +16,7 @@ class Cart {
     private $db;
     private $sessionKey = 'shopping_cart';
     private $productCache = [];
+    private $currencyDetector;
     
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -23,6 +24,7 @@ class Cart {
         }
         
         $this->db = Database::getInstance()->getConnection();
+        $this->currencyDetector = CurrencyDetector::getInstance();
         
         // Initialize cart if not exists
         if (!isset($_SESSION[$this->sessionKey])) {
@@ -184,9 +186,10 @@ class Cart {
     }
     
     /**
-     * Get cart totals for both currencies
+     * Get cart totals in current currency
      */
     public function getTotals() {
+        $currency = $this->currencyDetector->getCurrency();
         $subtotal_kes = 0.0;
         $subtotal_tzs = 0.0;
         
@@ -195,22 +198,39 @@ class Cart {
             $subtotal_tzs += $item['price_tzs'] * $item['quantity'];
         }
         
-        // Calculate tax (16% for KES, 18% for TZS)
-        $tax_kes = $subtotal_kes * 0.16;
-        $tax_tzs = $subtotal_tzs * 0.18;
+        // Calculate tax based on currency
+        $taxRate = match($currency) {
+            'KES' => 0.16, // 16% VAT Kenya
+            'TZS' => 0.18, // 18% VAT Tanzania
+            'UGX' => 0.18, // 18% VAT Uganda
+            'USD' => 0.00, // No tax for international
+            default => 0.16
+        };
+        
+        // Convert to current currency
+        $subtotal = $this->currencyDetector->getPrice($subtotal_kes, $currency);
+        $tax = $subtotal * $taxRate;
+        $total = $subtotal + $tax;
         
         return [
+            'currency' => $currency,
+            'symbol' => $this->currencyDetector->getCurrencyDetails()['symbol'] ?? '$',
+            'subtotal' => $subtotal,
+            'tax' => $tax,
+            'tax_rate' => $taxRate,
+            'total' => $total,
+            'item_count' => $this->getItemCount(),
+            // Keep legacy format for backward compatibility
             'kes' => [
                 'subtotal' => $subtotal_kes,
-                'tax' => $tax_kes,
-                'total' => $subtotal_kes + $tax_kes
+                'tax' => $subtotal_kes * 0.16,
+                'total' => $subtotal_kes + ($subtotal_kes * 0.16)
             ],
             'tzs' => [
                 'subtotal' => $subtotal_tzs,
-                'tax' => $tax_tzs,
-                'total' => $subtotal_tzs + $tax_tzs
-            ],
-            'item_count' => $this->getItemCount()
+                'tax' => $subtotal_tzs * 0.18,
+                'total' => $subtotal_tzs + ($subtotal_tzs * 0.18)
+            ]
         ];
     }
     

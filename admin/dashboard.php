@@ -2,8 +2,8 @@
 define('JINKA_ACCESS', true);
 require_once 'includes/auth.php';
 
-// Require authentication
-$auth = requireAuth('admin');
+// Require authentication (support agents can view limited dashboard)
+$auth = requireAuth('support_agent');
 $currentUser = $auth->getCurrentUser();
 
 // Get dashboard statistics

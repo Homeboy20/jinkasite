@@ -304,6 +304,8 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
     <?php endif; ?>
     
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/header-modern.css">
+    <link rel="stylesheet" href="css/theme-variables.php">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -338,7 +340,7 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .breadcrumb-list a {
-            color: #2563eb;
+            color: #ff5900;
             text-decoration: none;
         }
 
@@ -427,15 +429,15 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .thumbnail-item:hover {
-            border-color: #3b82f6;
+            border-color: #ff5900;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 89, 0, 0.2);
         }
 
         .thumbnail-item.active {
-            border-color: #3b82f6;
+            border-color: #ff5900;
             border-width: 3px;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(255, 89, 0, 0.1);
         }
 
         .thumbnail-item img {
@@ -502,8 +504,8 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .category-badge {
-            background: #eff6ff;
-            color: #2563eb;
+            background: #ffedd5;
+            color: #ff5900;
             padding: 0.375rem 0.75rem;
             border-radius: 6px;
             font-weight: 600;
@@ -512,7 +514,7 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .category-badge:hover {
-            background: #dbeafe;
+            background: #fed7aa;
         }
 
         .stock-badge {
@@ -612,15 +614,15 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .btn-primary {
-            background: #2563eb;
+            background: #ff5900;
             color: white;
             flex: 1;
         }
 
         .btn-primary:hover {
-            background: #1d4ed8;
+            background: #e64f00;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 6px 20px rgba(255, 89, 0, 0.3);
         }
 
         .btn-secondary {
@@ -642,9 +644,9 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .btn-outline:hover {
-            border-color: #2563eb;
-            color: #2563eb;
-            background: #eff6ff;
+            border-color: #ff5900;
+            color: #ff5900;
+            background: #ffedd5;
         }
 
         .trust-features {
@@ -664,12 +666,12 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         .trust-icon {
             width: 40px;
             height: 40px;
-            background: #eff6ff;
+            background: #ffedd5;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #2563eb;
+            color: #ff5900;
         }
 
         .trust-text {
@@ -717,12 +719,12 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .tab-button.active {
-            color: #2563eb;
-            border-bottom-color: #2563eb;
+            color: #ff5900;
+            border-bottom-color: #ff5900;
         }
 
         .tab-button:hover {
-            color: #2563eb;
+            color: #ff5900;
         }
 
         .tab-content {
@@ -783,16 +785,16 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .description-content a {
-            color: #2563eb;
+            color: #ff5900;
             text-decoration: underline;
         }
 
         .description-content a:hover {
-            color: #1d4ed8;
+            color: #e64f00;
         }
 
         .description-content blockquote {
-            border-left: 4px solid #2563eb;
+            border-left: 4px solid #ff5900;
             padding-left: 1rem;
             margin: 1.5rem 0;
             font-style: italic;
@@ -812,13 +814,13 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
             padding: 1.25rem;
             background: #f8fafc;
             border-radius: 8px;
-            border-left: 3px solid #2563eb;
+            border-left: 3px solid #ff5900;
         }
 
         .feature-icon {
             width: 36px;
             height: 36px;
-            background: #2563eb;
+            background: #ff5900;
             color: white;
             border-radius: 8px;
             display: flex;
@@ -926,13 +928,13 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         }
 
         .related-card-title a:hover {
-            color: #2563eb;
+            color: #ff5900;
         }
 
         .related-card-price {
             font-size: 1.125rem;
             font-weight: 700;
-            color: #2563eb;
+            color: #ff5900;
         }
 
         @media (max-width: 1024px) {
@@ -1199,13 +1201,12 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
                         <div class="product-pricing-box">
                             <div class="price-label">Price</div>
                             <div class="price-display">
+                                <?php
+                                $currency = $currencyDetector->getCurrentCurrency();
+                                $price = $currencyDetector->getPrice($product['price_kes']);
+                                ?>
                                 <div class="price">
-                                    <span class="currency">KES</span>
-                                    <?php echo number_format($product['price_kes'], 0); ?>
-                                </div>
-                                <div class="price price-secondary">
-                                    <span class="currency">TZS</span>
-                                    <?php echo number_format($product['price_tzs'], 0); ?>
+                                    <?php echo $currencyDetector->formatPrice($price); ?>
                                 </div>
                             </div>
                             <div class="price-note">Installation & training included • <?php echo $product['warranty_period']; ?> months warranty</div>
@@ -1226,35 +1227,37 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
                             <?php endif; ?>
                         </div>
 
-                        <div class="cta-buttons">
+                        <div class="cta-buttons" style="display: flex; gap: 1rem; flex-wrap: wrap;">
                             <?php if ($product['stock_quantity'] > 0): ?>
                             <button onclick="addToCart(<?php echo $product['id']; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>')" 
-                                    class="btn btn-primary">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                    class="btn btn-primary btn-pulse" style="flex: 1; min-width: 200px; font-size: 1.125rem; padding: 1rem 2rem;">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                                 </svg>
-                                Add to Cart
+                                Add to Cart - Order Now
                             </button>
                             <?php else: ?>
-                            <button class="btn btn-primary" disabled>
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                            <button class="btn btn-primary" disabled style="flex: 1; min-width: 200px; font-size: 1.125rem; padding: 1rem 2rem;">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                                 </svg>
-                                Out of Stock
+                                Out of Stock - Request Restock
                             </button>
                             <?php endif; ?>
-                            <a href="https://wa.me/255753098911?text=Hi, I'd like to order: <?php echo urlencode($product['name']); ?> (<?php echo urlencode($product['sku']); ?>)" 
-                               class="btn btn-secondary" target="_blank">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                            <a href="https://wa.me/<?php echo htmlspecialchars($whatsapp_number_link); ?>?text=<?php echo urlencode('Hi, I\'m interested in ' . $product['name'] . ' (' . $product['sku'] . '). Can you provide more details?'); ?>" 
+                               class="btn btn-secondary" target="_blank" style="flex: 1; min-width: 200px; font-size: 1.125rem; padding: 1rem 2rem; background: #25d366; border-color: #25d366;">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                                 </svg>
-                                Order via WhatsApp
+                                Chat on WhatsApp
                             </a>
-                            <a href="index.php#contact" class="btn btn-outline">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        </div>
+                        <div style="margin-top: 1.25rem; text-align: center;">
+                            <a href="index.php#contact" style="color: #ff5900; text-decoration: underline; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                                 </svg>
-                                Request Quote
+                                Need a custom quote? Contact us →
                             </a>
                         </div>
 
@@ -1385,17 +1388,18 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
                                 <p class="product-description"><?php echo htmlspecialchars(substr($upsell['short_description'], 0, 80)); ?>...</p>
                             <?php endif; ?>
                             <div class="product-price">
-                                <span class="price-kes">KES <?php echo number_format($upsell['price_kes'], 0); ?></span>
-                                <?php if ($upsell['price_tzs'] > 0): ?>
-                                    <span class="price-tzs">TZS <?php echo number_format($upsell['price_tzs'], 0); ?></span>
-                                <?php endif; ?>
+                                <?php
+                                $upsell_price = $currencyDetector->getPrice($upsell['price_kes']);
+                                ?>
+                                <span class="price-kes"><?php echo $currencyDetector->formatPrice($upsell_price); ?></span>
                             </div>
                             <?php
                             $price_difference = $upsell['price_kes'] - $product['price_kes'];
                             if ($price_difference > 0):
+                                $diff_converted = $currencyDetector->getPrice($price_difference);
                             ?>
                                 <div class="price-difference">
-                                    <small>+KES <?php echo number_format($price_difference, 0); ?> for upgraded features</small>
+                                    <small>+<?php echo $currencyDetector->formatPrice($diff_converted); ?> for upgraded features</small>
                                 </div>
                             <?php endif; ?>
                             <div class="product-actions">
@@ -1447,10 +1451,10 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
                                 <p class="product-description"><?php echo htmlspecialchars(substr($accessory['short_description'], 0, 80)); ?>...</p>
                             <?php endif; ?>
                             <div class="product-price">
-                                <span class="price-kes">KES <?php echo number_format($accessory['price_kes'], 0); ?></span>
-                                <?php if ($accessory['price_tzs'] > 0): ?>
-                                    <span class="price-tzs">TZS <?php echo number_format($accessory['price_tzs'], 0); ?></span>
-                                <?php endif; ?>
+                                <?php
+                                $accessory_price = $currencyDetector->getPrice($accessory['price_kes']);
+                                ?>
+                                <span class="price-kes"><?php echo $currencyDetector->formatPrice($accessory_price); ?></span>
                             </div>
                             <div class="product-actions">
                                 <button onclick="addToCart(<?php echo $accessory['id']; ?>, '<?php echo htmlspecialchars($accessory['name'], ENT_QUOTES); ?>')" 
@@ -1516,10 +1520,10 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
                                 <p class="product-description"><?php echo htmlspecialchars(substr($related['short_description'], 0, 100)); ?>...</p>
                             <?php endif; ?>
                             <div class="product-price">
-                                <span class="price-kes">KES <?php echo number_format($related['price_kes'], 0); ?></span>
-                                <?php if ($related['price_tzs'] > 0): ?>
-                                    <span class="price-tzs">TZS <?php echo number_format($related['price_tzs'], 0); ?></span>
-                                <?php endif; ?>
+                                <?php
+                                $related_price = $currencyDetector->getPrice($related['price_kes']);
+                                ?>
+                                <span class="price-kes"><?php echo $currencyDetector->formatPrice($related_price); ?></span>
                             </div>
                             <?php
                             $stock_status = '';
@@ -1552,45 +1556,7 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-col">
-                    <h3>ProCut Solutions</h3>
-                    <p>Professional printing equipment supplier serving Kenya and Tanzania. Quality products, expert support, and competitive pricing.</p>
-                </div>
-                <div class="footer-col">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="products.php">Products</a></li>
-                        <li><a href="index.php#contact">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li>Tanzania: <a href="tel:+255753098911">+255 753 098 911</a></li>
-                        <li>Kenya: <a href="tel:+254716522828">+254 716 522 828</a></li>
-                        <li><a href="mailto:support@procutsolutions.com">support@procutsolutions.com</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Business Hours</h4>
-                    <ul>
-                        <li>Monday - Friday: 8am - 6pm</li>
-                        <li>Saturday: 9am - 4pm</li>
-                        <li>Sunday: Closed</li>
-                        <li>WhatsApp: 24/7</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> ProCut Solutions. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <?php include 'includes/footer.php'; ?>
 
     <!-- Sticky Mobile Add to Cart Bar -->
     <div class="sticky-cart-bar" id="stickyCartBar">
@@ -1603,13 +1569,19 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
             </div>
             <?php if ($product['stock_quantity'] > 0): ?>
             <button onclick="addToCart(<?php echo $product['id']; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>')" 
-                    class="btn btn-primary">
+                    class="btn btn-primary btn-pulse" style="font-size: 1rem; padding: 0.875rem 1.5rem;">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
                 Add to Cart
             </button>
             <?php else: ?>
-            <a href="https://wa.me/255753098911?text=Hi, I'd like to order: <?php echo urlencode($product['name']); ?>" 
-               class="btn btn-secondary" target="_blank">
-                WhatsApp
+            <a href="https://wa.me/<?php echo htmlspecialchars($whatsapp_number_link); ?>?text=<?php echo urlencode('Hi, I\'m interested in ' . $product['name'] . '. Is it back in stock?'); ?>" 
+               class="btn btn-secondary" target="_blank" style="font-size: 1rem; padding: 0.875rem 1.5rem; background: #25d366; border-color: #25d366;">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
+                WhatsApp Us
             </a>
             <?php endif; ?>
         </div>
@@ -1846,3 +1818,4 @@ $structured_data_json = json_encode($structured_data_graph, JSON_UNESCAPED_UNICO
     </style>
 </body>
 </html>
+

@@ -1,0 +1,463 @@
+/* ===============================================
+   CART PAGE RESPONSIVE ENHANCEMENTS
+   Enhanced for all devices with smooth UX
+   =============================================== */
+
+/* Base Responsive Improvements */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+/* Touch-friendly buttons */
+button, a {
+    touch-action: manipulation;
+}
+
+/* Smooth scrolling for checkout progress */
+.checkout-progress {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15, 23, 42, 0.2) transparent;
+}
+
+.checkout-progress::-webkit-scrollbar {
+    height: 4px;
+}
+
+.checkout-progress::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.2);
+    border-radius: 2px;
+}
+
+/* Cart item hover effects */
+.cart-item:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+/* Enhanced button interactions */
+.quantity-btn:active,
+.checkout-btn:active,
+.remove-btn:active {
+    transform: scale(0.95);
+}
+
+/* ======================
+   TABLET (1024px)
+   ====================== */
+@media (max-width: 1024px) {
+    .cart-page {
+        padding: 3rem 0 4rem;
+    }
+
+    .cart-shell {
+        padding: 0 1.25rem;
+    }
+
+    #cartLayout.cart-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .cart-summary {
+        position: relative;
+        top: 0;
+        margin-top: 2rem;
+        padding: 2rem;
+    }
+
+    .cart-header {
+        padding: 2rem;
+    }
+
+    .checkout-progress {
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+
+    .checkout-progress .step {
+        min-width: 140px;
+    }
+
+    .cart-item {
+        padding: 1.75rem;
+        gap: 1.25rem;
+    }
+
+    .checkout-btn {
+        font-size: 1rem;
+        padding: 1rem 2rem;
+    }
+}
+
+/* ======================
+   MOBILE (768px)
+   ====================== */
+@media (max-width: 768px) {
+    .cart-page {
+        padding: 2rem 0 3rem;
+    }
+
+    .cart-shell {
+        padding: 0 1rem;
+    }
+
+    .cart-header {
+        padding: 1.75rem 1.5rem;
+        border-radius: 12px;
+    }
+
+    .cart-header h1 {
+        font-size: 1.75rem;
+        line-height: 1.3;
+    }
+
+    .cart-header-subtitle {
+        font-size: 0.9375rem;
+    }
+
+    .checkout-progress {
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        gap: 0.75rem;
+        border-radius: 12px;
+    }
+
+    .checkout-progress .step {
+        min-width: 120px;
+    }
+
+    .step-marker {
+        width: 40px;
+        height: 40px;
+        font-size: 0.95rem;
+    }
+
+    .step-title {
+        font-size: 0.8125rem;
+    }
+
+    .step-caption {
+        font-size: 0.6875rem;
+    }
+
+    .cart-item {
+        grid-template-columns: 90px minmax(0, 1fr);
+        padding: 1.5rem;
+        gap: 1rem;
+        border-radius: 12px;
+    }
+
+    .item-image {
+        width: 90px;
+        height: 90px;
+        border-radius: 10px;
+    }
+
+    .item-name {
+        font-size: 1rem;
+    }
+
+    .item-price {
+        font-size: 1.125rem;
+    }
+
+    .item-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .quantity-control {
+        margin: 0;
+    }
+
+    .item-total {
+        text-align: left;
+        margin-top: 0;
+    }
+
+    .cart-summary {
+        padding: 1.75rem;
+        border-radius: 16px;
+    }
+
+    .summary-title {
+        font-size: 1.25rem;
+    }
+
+    .checkout-btn {
+        padding: 1rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .continue-shopping {
+        font-size: 0.9rem;
+        padding: 0.875rem 1rem;
+    }
+
+    .support-card {
+        padding: 1.25rem;
+        font-size: 0.9375rem;
+    }
+}
+
+/* ======================
+   SMALL MOBILE (540px)
+   ====================== */
+@media (max-width: 540px) {
+    .cart-page {
+        padding: 1.5rem 0 2.5rem;
+    }
+
+    .cart-shell {
+        padding: 0 0.875rem;
+    }
+
+    .cart-header {
+        padding: 1.5rem 1.25rem;
+        border-radius: 10px;
+    }
+
+    .cart-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .cart-header-subtitle {
+        font-size: 0.875rem;
+    }
+
+    .cart-header-count {
+        font-size: 0.875rem;
+    }
+
+    .checkout-progress {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        gap: 0.5rem;
+        border-radius: 10px;
+    }
+
+    .checkout-progress .step {
+        min-width: 110px;
+    }
+
+    .step-marker {
+        width: 44px;
+        height: 44px;
+    }
+
+    .step-title {
+        font-size: 0.875rem;
+    }
+
+    .step-caption {
+        font-size: 0.6875rem;
+    }
+
+    .cart-item {
+        grid-template-columns: 1fr;
+        padding: 1.25rem;
+        gap: 1rem;
+        border-radius: 10px;
+    }
+
+    .item-image {
+        width: 100%;
+        height: 200px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    .item-name {
+        font-size: 1.0625rem;
+    }
+
+    .item-price {
+        font-size: 1.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .item-meta {
+        font-size: 0.8125rem;
+    }
+
+    .item-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .quantity-control {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .quantity-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.125rem;
+    }
+
+    .quantity-value {
+        font-size: 1rem;
+        min-width: 50px;
+    }
+
+    .remove-btn {
+        width: 100%;
+        padding: 0.875rem;
+        font-size: 0.9rem;
+    }
+
+    .item-total {
+        text-align: center;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .item-total .label {
+        font-size: 0.875rem;
+    }
+
+    .item-total .value {
+        font-size: 1.375rem;
+    }
+
+    .cart-summary {
+        padding: 1.5rem;
+        border-radius: 12px;
+    }
+
+    .summary-title {
+        font-size: 1.125rem;
+    }
+
+    .summary-row {
+        font-size: 0.9375rem;
+    }
+
+    .total-row {
+        font-size: 1.125rem;
+    }
+
+    .checkout-btn {
+        padding: 1.125rem 1.25rem;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
+
+    .continue-shopping {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+    }
+
+    .support-card {
+        padding: 1rem;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+
+    .empty-cart-message h2 {
+        font-size: 1.5rem;
+    }
+
+    .empty-cart-message p {
+        font-size: 0.9375rem;
+    }
+}
+
+/* ======================
+   EXTRA SMALL (375px)
+   ====================== */
+@media (max-width: 375px) {
+    .cart-shell {
+        padding: 0 0.75rem;
+    }
+
+    .cart-header {
+        padding: 1.25rem 1rem;
+    }
+
+    .cart-header h1 {
+        font-size: 1.375rem;
+    }
+
+    .checkout-progress {
+        padding: 0.875rem;
+    }
+
+    .cart-item {
+        padding: 1rem;
+    }
+
+    .item-image {
+        height: 180px;
+    }
+
+    .cart-summary {
+        padding: 1.25rem;
+    }
+
+    .checkout-btn {
+        padding: 1rem;
+        font-size: 0.9375rem;
+    }
+}
+
+/* ======================
+   LANDSCAPE PHONES
+   ====================== */
+@media (max-width: 896px) and (orientation: landscape) {
+    .cart-page {
+        padding: 1.5rem 0;
+    }
+
+    .cart-header {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .checkout-progress {
+        padding: 1rem;
+    }
+
+    .cart-item {
+        grid-template-columns: 80px minmax(0, 1fr);
+        padding: 1.25rem;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* ======================
+   PRINT STYLES
+   ====================== */
+@media print {
+    .cart-header,
+    .checkout-progress,
+    .checkout-btn,
+    .continue-shopping,
+    .remove-btn,
+    .quantity-control {
+        display: none !important;
+    }
+
+    .cart-item {
+        page-break-inside: avoid;
+    }
+}

@@ -4,7 +4,7 @@ if (!defined('JINKA_ACCESS')) {
 }
 require_once 'includes/auth.php';
 
-$auth = requireAuth('admin');
+$auth = requireAuth('support_agent');
 $currentUser = $auth->getCurrentUser();
 $db = Database::getInstance()->getConnection();
 

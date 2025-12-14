@@ -166,9 +166,10 @@ class AdminAuth {
         
         $userRole = $_SESSION['admin_role'] ?? '';
         $roleHierarchy = [
-            'manager' => 1,
-            'admin' => 2,
-            'super_admin' => 3
+            'support_agent' => 1,
+            'manager' => 2,
+            'admin' => 3,
+            'super_admin' => 4
         ];
         
         $userLevel = $roleHierarchy[$userRole] ?? 0;
@@ -477,7 +478,13 @@ function requireAuth($requiredRole = 'admin') {
             echo json_encode(['success' => false, 'message' => 'Insufficient privileges']);
             exit;
         } else {
-            redirect('dashboard.php', 'Insufficient privileges', 'error');
+            // Redirect to appropriate page based on user role
+            $user = $auth->getCurrentUser();
+            if ($user['role'] === 'support_agent') {
+                redirect('support-tickets.php', 'You do not have access to this page', 'error');
+            } else {
+                redirect('dashboard.php', 'Insufficient privileges', 'error');
+            }
         }
     }
     

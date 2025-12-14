@@ -12,6 +12,16 @@ $db = Database::getInstance()->getConnection();
 $message = '';
 $messageType = '';
 
+// Helper function to get settings
+function getSetting($key, $default = '') {
+    global $db;
+    $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+    $stmt->bind_param('s', $key);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    return $result ? $result['setting_value'] : $default;
+}
+
 // Handle form submissions
 if ($_POST) {
     $action = $_POST['action'] ?? '';
@@ -23,8 +33,43 @@ if ($_POST) {
         $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
         $short_description = Security::sanitizeInput($_POST['short_description']);
         $description = $_POST['description']; // Allow HTML
-        $price_kes = (float)$_POST['price_kes'];
-        $price_tzs = (float)$_POST['price_tzs'];
+        
+        // Get price and input currency
+        $input_price = (float)$_POST['price_kes'];
+        $input_currency = Security::sanitizeInput($_POST['input_currency'] ?? 'KES');
+        
+        // Convert price to base currency if needed
+        require_once __DIR__ . '/../includes/CurrencyDetector.php';
+        $currencyDetector = CurrencyDetector::getInstance();
+        $baseCurrency = $currencyDetector->getBaseCurrency();
+        
+        // Get exchange rates from database
+        $exchange_rates = [
+            'KES' => (float)getSetting('exchange_rate_kes', '1'),
+            'TZS' => (float)getSetting('exchange_rate_tzs', '2860'),
+            'UGX' => (float)getSetting('exchange_rate_ugx', '3900'),
+            'USD' => (float)getSetting('exchange_rate_usd', '0.0077')
+        ];
+        
+        // If input currency is different from base, convert it
+        if ($input_currency !== $baseCurrency) {
+            $inputRate = $exchange_rates[$input_currency];
+            $baseRate = $exchange_rates[$baseCurrency]; // Should always be 1
+            
+            // Convert: input_price / input_rate * base_rate
+            // Since base_rate is always 1: input_price / input_rate
+            if ($inputRate > 0) {
+                $price_kes = $input_price / $inputRate;
+            } else {
+                $price_kes = $input_price; // Fallback
+            }
+        } else {
+            $price_kes = $input_price;
+        }
+        
+        // Calculate all currency prices for storage
+        $price_tzs = $price_kes * $exchange_rates['TZS'];
+        
         $stock_quantity = (int)$_POST['stock_quantity'];
         $is_featured = isset($_POST['is_featured']) ? 1 : 0;
         $is_active = isset($_POST['is_active']) ? 1 : 0;
@@ -66,8 +111,8 @@ if ($_POST) {
         }
         
         if ($action === 'create') {
-            $stmt = $db->prepare("INSERT INTO products (name, slug, sku, category_id, short_description, description, specifications, features, price_kes, price_tzs, stock_quantity, is_featured, is_active, image, video_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param('sssissssddiiiss', $name, $slug, $sku, $category_id, $short_description, $description, $specifications_json, $features_json, $price_kes, $price_tzs, $stock_quantity, $is_featured, $is_active, $image, $video_url);
+            $stmt = $db->prepare("INSERT INTO products (name, slug, sku, category_id, short_description, description, specifications, features, price_kes, price_tzs, stock_quantity, is_featured, is_active, image, video_url, input_currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param('sssissssddiisss', $name, $slug, $sku, $category_id, $short_description, $description, $specifications_json, $features_json, $price_kes, $price_tzs, $stock_quantity, $is_featured, $is_active, $image, $video_url, $baseCurrency);
             
             if ($stmt->execute()) {
                 $product_id = $db->insert_id;
@@ -94,8 +139,8 @@ if ($_POST) {
             }
         } else {
             $id = (int)$_POST['id'];
-            $stmt = $db->prepare("UPDATE products SET name=?, slug=?, sku=?, category_id=?, short_description=?, description=?, specifications=?, features=?, price_kes=?, price_tzs=?, stock_quantity=?, is_featured=?, is_active=?, image=?, video_url=? WHERE id=?");
-            $stmt->bind_param('sssissssddiiissi', $name, $slug, $sku, $category_id, $short_description, $description, $specifications_json, $features_json, $price_kes, $price_tzs, $stock_quantity, $is_featured, $is_active, $image, $video_url, $id);
+            $stmt = $db->prepare("UPDATE products SET name=?, slug=?, sku=?, category_id=?, short_description=?, description=?, specifications=?, features=?, price_kes=?, price_tzs=?, stock_quantity=?, is_featured=?, is_active=?, image=?, video_url=?, input_currency=? WHERE id=?");
+            $stmt->bind_param('sssissssddiiisssi', $name, $slug, $sku, $category_id, $short_description, $description, $specifications_json, $features_json, $price_kes, $price_tzs, $stock_quantity, $is_featured, $is_active, $image, $video_url, $baseCurrency, $id);
             
             if ($stmt->execute()) {
                 // Delete existing gallery images
@@ -390,6 +435,22 @@ if (isset($_GET['edit'])) {
                     </div>
                 <?php endif; ?>
 
+                <!-- Currency Info Box -->
+                <div style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-left: 4px solid #ff5900; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="display: flex; align-items: start; gap: 1rem;">
+                        <div style="font-size: 2rem;">💱</div>
+                        <div style="flex: 1;">
+                            <strong style="color: #ff5900; font-size: 1.05rem;">Currency System Active</strong>
+                            <p style="color: #64748b; font-size: 0.875rem; margin: 0.5rem 0 0; line-height: 1.5;">
+                                All product prices are stored in <strong style="color: #ff5900;"><?= $currencyDetector->getBaseCurrency() ?></strong> (base currency). 
+                                When adding/editing products, you can enter prices in any supported currency and they'll be automatically converted. 
+                                Customer-facing prices are dynamically converted based on their location or selection.
+                                <a href="settings.php" style="color: #ff5900; text-decoration: underline; margin-left: 0.5rem;">Manage Currency Settings →</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Edit Product Form (Only shows when editing) -->
                 <?php if ($editing_product): ?>
                 <div class="card edit-form">
@@ -453,17 +514,56 @@ if (isset($_GET['edit'])) {
                             <!-- Pricing -->
                             <div class="form-section">
                                 <h4>Pricing</h4>
+                                <?php if (!$editing_product): ?>
+                                <div style="background: #fff7ed; border-left: 4px solid #ff5900; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                                    <strong style="color: #ff5900;">💱 Currency Conversion:</strong>
+                                    <p style="color: #64748b; font-size: 0.875rem; margin: 0.5rem 0 0;">
+                                        Select the currency you're entering the price in. It will be automatically converted to the base currency (<?= $currencyDetector->getBaseCurrency() ?>) for storage.
+                                    </p>
+                                </div>
+                                <?php endif; ?>
                                 <div class="form-grid">
+                                    <?php if (!$editing_product): ?>
                                     <div class="form-group">
-                                        <label for="price_kes">Price (KES) *</label>
+                                        <label for="input_currency">Input Currency *</label>
+                                        <select id="input_currency" name="input_currency" onchange="updatePriceLabel()">
+                                            <?php
+                                            $baseCurrency = $currencyDetector->getBaseCurrency();
+                                            $availableCurrencies = $currencyDetector->getAvailableCurrencies();
+                                            foreach ($availableCurrencies as $code => $details):
+                                            ?>
+                                                <option value="<?= $code ?>" <?= $code === $baseCurrency ? 'selected' : '' ?>>
+                                                    <?= $code ?> - <?= $details['name'] ?>
+                                                    <?= $code === $baseCurrency ? ' (Base)' : '' ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <small style="color: #64748b;">Currency you're entering the price in</small>
+                                    </div>
+                                    <?php else: ?>
+                                    <input type="hidden" id="input_currency" name="input_currency" value="<?= $currencyDetector->getBaseCurrency() ?>">
+                                    <?php endif; ?>
+                                    
+                                    <div class="form-group">
+                                        <label for="price_kes">
+                                            <?php if ($editing_product): ?>
+                                                Price (<?= $currencyDetector->getBaseCurrency() ?>) *
+                                            <?php else: ?>
+                                                <span id="price_label">Price (<?= $currencyDetector->getBaseCurrency() ?>)</span> *
+                                            <?php endif; ?>
+                                        </label>
                                         <input type="number" step="0.01" id="price_kes" name="price_kes" required 
-                                               value="<?= $editing_product['price_kes'] ?? '' ?>">
+                                               value="<?= $editing_product['price_kes'] ?? '' ?>"
+                                               placeholder="0.00">
+                                        <small style="color: #64748b;">
+                                            <?php if ($editing_product): ?>
+                                                Enter price in base currency (<?= $currencyDetector->getBaseCurrency() ?>)
+                                            <?php else: ?>
+                                                <span id="conversion_note">Will be stored in base currency (<?= $currencyDetector->getBaseCurrency() ?>)</span>
+                                            <?php endif; ?>
+                                        </small>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="price_tzs">Price (TZS) *</label>
-                                        <input type="number" step="0.01" id="price_tzs" name="price_tzs" required 
-                                               value="<?= $editing_product['price_tzs'] ?? '' ?>">
-                                    </div>
+                                    
                                     <div class="form-group">
                                         <label for="stock_quantity">Stock Quantity</label>
                                         <input type="number" id="stock_quantity" name="stock_quantity" 
@@ -471,6 +571,29 @@ if (isset($_GET['edit'])) {
                                     </div>
                                 </div>
                             </div>
+
+                            <?php if (!$editing_product): ?>
+                            <script>
+                            function updatePriceLabel() {
+                                const currencySelect = document.getElementById('input_currency');
+                                const selectedCurrency = currencySelect.value;
+                                const baseCurrency = '<?= $currencyDetector->getBaseCurrency() ?>';
+                                const priceLabel = document.getElementById('price_label');
+                                const conversionNote = document.getElementById('conversion_note');
+                                
+                                priceLabel.textContent = 'Price (' + selectedCurrency + ')';
+                                
+                                if (selectedCurrency === baseCurrency) {
+                                    conversionNote.innerHTML = 'Base currency - no conversion needed';
+                                } else {
+                                    conversionNote.innerHTML = 'Will be converted from ' + selectedCurrency + ' to ' + baseCurrency + ' (base currency)';
+                                }
+                            }
+                            
+                            // Initialize on page load
+                            document.addEventListener('DOMContentLoaded', updatePriceLabel);
+                            </script>
+                            <?php endif; ?>
 
                             <!-- Specifications -->
                             <div class="form-section">
@@ -678,10 +801,8 @@ if (isset($_GET['edit'])) {
                                                 </td>
                                                 <td>
                                                     <div class="price-display">
-                                                        <strong>KES <?= number_format($product['price_kes'], 0) ?></strong>
-                                                        <?php if ($product['price_tzs'] > 0): ?>
-                                                            <small>TZS <?= number_format($product['price_tzs'], 0) ?></small>
-                                                        <?php endif; ?>
+                                                        <strong><?= $currencyDetector->getBaseCurrency() ?> <?= number_format($product['price_kes'], 0) ?></strong>
+                                                        <small style="color: #64748b; display: block; font-size: 0.75rem;">Base Currency</small>
                                                     </div>
                                                 </td>
                                                 <td>
@@ -997,25 +1118,43 @@ if (isset($_GET['edit'])) {
                                 <p>Set prices and manage stock levels</p>
                             </div>
                             
+                            <div style="background: #fff7ed; border-left: 4px solid #ff5900; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                                <strong style="color: #ff5900;">💱 Multi-Currency System:</strong>
+                                <p style="color: #64748b; font-size: 0.875rem; margin: 0.5rem 0 0;">
+                                    Select the currency you're entering the price in. The system will automatically convert it to the base currency (<?= $currencyDetector->getBaseCurrency() ?>) for storage. Prices are displayed to customers in their local currency based on IP detection or manual selection.
+                                </p>
+                            </div>
+                            
                             <div class="form-grid modal-grid">
                                 <div class="form-group">
-                                    <label for="modal_price_kes">Price (KES) *</label>
-                                    <div class="input-with-currency">
-                                        <span class="currency-symbol">KES</span>
-                                        <input type="number" id="modal_price_kes" name="price_kes" step="0.01" 
-                                               placeholder="0.00" required>
-                                    </div>
-                                    <small class="form-hint">Primary selling price in Kenyan Shillings</small>
+                                    <label for="modal_input_currency">Input Currency *</label>
+                                    <select id="modal_input_currency" name="input_currency" class="form-control" onchange="updateModalPriceLabel()">
+                                        <?php
+                                        $baseCurrency = $currencyDetector->getBaseCurrency();
+                                        $availableCurrencies = $currencyDetector->getAvailableCurrencies();
+                                        foreach ($availableCurrencies as $code => $details):
+                                        ?>
+                                            <option value="<?= $code ?>" <?= $code === $baseCurrency ? 'selected' : '' ?>>
+                                                <?= $code ?> - <?= $details['name'] ?>
+                                                <?= $code === $baseCurrency ? ' (Base Currency)' : '' ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="form-hint">Currency you're entering the price in</small>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="modal_price_tzs">Price (TZS)</label>
+                                    <label for="modal_price_kes">
+                                        <span id="modal_price_label">Price (<?= $baseCurrency ?>)</span> *
+                                    </label>
                                     <div class="input-with-currency">
-                                        <span class="currency-symbol">TZS</span>
-                                        <input type="number" id="modal_price_tzs" name="price_tzs" step="0.01" 
-                                               placeholder="0.00">
+                                        <span class="currency-symbol" id="modal_currency_symbol"><?= $baseCurrency ?></span>
+                                        <input type="number" id="modal_price_kes" name="price_kes" step="0.01" 
+                                               placeholder="0.00" required>
                                     </div>
-                                    <small class="form-hint">Optional price in Tanzanian Shillings</small>
+                                    <small class="form-hint" id="modal_price_hint">
+                                        Will be automatically converted to base currency (<?= $baseCurrency ?>)
+                                    </small>
                                 </div>
 
                                 <div class="form-group">
@@ -1039,6 +1178,34 @@ if (isset($_GET['edit'])) {
                                     </div>
                                 </div>
                             </div>
+                            
+                            <script>
+                            function updateModalPriceLabel() {
+                                const currencySelect = document.getElementById('modal_input_currency');
+                                const selectedCurrency = currencySelect ? currencySelect.value : '<?= $baseCurrency ?>';
+                                const baseCurrency = '<?= $baseCurrency ?>';
+                                const priceLabel = document.getElementById('modal_price_label');
+                                const currencySymbol = document.getElementById('modal_currency_symbol');
+                                const priceHint = document.getElementById('modal_price_hint');
+                                
+                                if (priceLabel) priceLabel.textContent = 'Price (' + selectedCurrency + ')';
+                                if (currencySymbol) currencySymbol.textContent = selectedCurrency;
+                                
+                                if (priceHint) {
+                                    if (selectedCurrency === baseCurrency) {
+                                        priceHint.innerHTML = 'Base currency - stored directly without conversion';
+                                    } else {
+                                        priceHint.innerHTML = 'Will be converted from ' + selectedCurrency + ' to ' + baseCurrency + ' (base currency)';
+                                    }
+                                }
+                            }
+                            
+                            // Initialize on modal open
+                            if (typeof window.modalPriceLabelInitialized === 'undefined') {
+                                document.addEventListener('DOMContentLoaded', updateModalPriceLabel);
+                                window.modalPriceLabelInitialized = true;
+                            }
+                            </script>
                         </div>
 
                         <!-- Features & Specifications Tab -->

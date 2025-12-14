@@ -255,7 +255,7 @@ include 'includes/header.php';
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #ff5900;
         color: white;
     }
 
@@ -266,8 +266,8 @@ include 'includes/header.php';
 
     .btn-secondary {
         background: white;
-        color: #667eea;
-        border: 2px solid #667eea;
+        color: #ff5900;
+        border: 2px solid #ff5900;
     }
 
     .btn-secondary:hover {
@@ -276,7 +276,7 @@ include 'includes/header.php';
 
     .info-notice {
         background: #eff6ff;
-        border: 1px solid #3b82f6;
+        border: 1px solid #ff5900;
         border-radius: 10px;
         padding: 1.5rem;
         margin-top: 2rem;
@@ -285,7 +285,7 @@ include 'includes/header.php';
     }
 
     .info-notice i {
-        color: #3b82f6;
+        color: #ff5900;
         font-size: 1.5rem;
     }
 
@@ -441,7 +441,7 @@ include 'includes/header.php';
             <?php if ($delivery): ?>
             <div class="order-items">
                 <h3><i class="fas fa-truck"></i> Delivery Tracking</h3>
-                <div class="item-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="item-card" style="background: #ff5900; color: white;">
                     <div class="item-info" style="width: 100%;">
                         <div class="item-name" style="color: white; margin-bottom: 1rem;">
                             Track your delivery in real-time
@@ -469,7 +469,7 @@ include 'includes/header.php';
                             <?php endif; ?>
                         </div>
                         <a href="track-delivery.php?tracking=<?= $delivery['tracking_number'] ?>" 
-                           style="display: inline-block; padding: 0.75rem 1.5rem; background: white; color: #667eea; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 0.5rem;">
+                           style="display: inline-block; padding: 0.75rem 1.5rem; background: white; color: #ff5900; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 0.5rem;">
                             <i class="fas fa-map-marker-alt"></i> Track Delivery
                         </a>
                     </div>
@@ -508,3 +508,4 @@ include 'includes/header.php';
 </div>
 
 <?php include 'includes/footer.php'; ?>
+

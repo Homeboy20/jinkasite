@@ -383,9 +383,10 @@ if (isset($_GET['edit'])) {
                                 <div class="form-group">
                                     <label for="role">Role</label>
                                     <select id="role" name="role">
+                                        <option value="super_admin" <?= ($editing_user['role'] ?? '') == 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
                                         <option value="admin" <?= ($editing_user['role'] ?? '') == 'admin' ? 'selected' : '' ?>>Admin</option>
                                         <option value="manager" <?= ($editing_user['role'] ?? '') == 'manager' ? 'selected' : '' ?>>Manager</option>
-                                        <option value="staff" <?= ($editing_user['role'] ?? '') == 'staff' ? 'selected' : '' ?>>Staff</option>
+                                        <option value="support_agent" <?= ($editing_user['role'] ?? '') == 'support_agent' ? 'selected' : '' ?>>Support Agent</option>
                                     </select>
                                 </div>
                                 
@@ -429,9 +430,10 @@ if (isset($_GET['edit'])) {
                                 
                                 <select name="role">
                                     <option value="">All Roles</option>
+                                    <option value="super_admin" <?= $role_filter == 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
                                     <option value="admin" <?= $role_filter == 'admin' ? 'selected' : '' ?>>Admin</option>
                                     <option value="manager" <?= $role_filter == 'manager' ? 'selected' : '' ?>>Manager</option>
-                                    <option value="staff" <?= $role_filter == 'staff' ? 'selected' : '' ?>>Staff</option>
+                                    <option value="support_agent" <?= $role_filter == 'support_agent' ? 'selected' : '' ?>>Support Agent</option>
                                 </select>
 
                                 <select name="status">

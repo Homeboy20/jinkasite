@@ -4,11 +4,40 @@ if (!defined('JINKA_ACCESS')) {
 }
 require_once 'includes/config.php';
 require_once 'includes/Cart.php';
+require_once 'includes/CurrencyDetector.php';
+$firebase_config = require_once 'includes/firebase-config.php';
 
 $cart = new Cart();
 $items = $cart->getItems();
 $totals = $cart->getTotals();
 $validation = $cart->validateCart();
+
+if (!function_exists('compute_cart_hash')) {
+    function compute_cart_hash(array $items, array $totals) {
+        $sortedItems = $items;
+        if (!empty($sortedItems)) {
+            ksort($sortedItems);
+        }
+        return hash_hmac(
+            'sha256',
+            json_encode(['items' => $sortedItems, 'totals' => $totals], JSON_UNESCAPED_SLASHES),
+            SECRET_KEY
+        );
+    }
+}
+
+$checkout_cart_hash = compute_cart_hash($items, $totals);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$checkout_csrf = bin2hex(random_bytes(32));
+$_SESSION['checkout_csrf'] = $checkout_csrf;
+$_SESSION['checkout_cart_hash'] = $checkout_cart_hash;
+
+// Get current currency
+$currencyDetector = CurrencyDetector::getInstance();
+$checkoutCurrency = $currencyDetector->getCurrency();
+$isUSDCheckout = ($checkoutCurrency === 'USD');
 
 $site_name = site_setting('site_name', 'ProCut Solutions');
 $site_logo = site_setting('site_logo', '');
@@ -77,6 +106,8 @@ $page_title = 'Checkout | ' . $site_name;
     <link rel="icon" href="<?php echo htmlspecialchars($site_favicon); ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/header-modern.css">
+    <link rel="stylesheet" href="css/theme-variables.php">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -123,7 +154,36 @@ $page_title = 'Checkout | ' . $site_name;
             display: block;
             margin-bottom: 0.5rem;
         }
-        input, textarea {
+        .input-with-action {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .input-with-action input {
+            flex: 1;
+        }
+        .btn-compact {
+            padding: 0.65rem 0.9rem;
+            font-size: 0.95rem;
+            border-radius: 10px;
+            background: #e2e8f0;
+            border: 2px solid #e2e8f0;
+            color: #0f172a;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .btn-compact:hover {
+            background: #d9e2ec;
+        }
+        .verify-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+        }
+        .verify-status.success { color: #15803d; }
+        .verify-status.error { color: #b91c1c; }
+        .verify-status.pending { color: #b45309; }
+        input, textarea, select {
             width: 100%;
             padding: 0.9rem 1rem;
             border-radius: 10px;
@@ -132,8 +192,8 @@ $page_title = 'Checkout | ' . $site_name;
             font-size: 1rem;
             transition: border-color 0.2s ease, background 0.2s ease;
         }
-        input:focus, textarea:focus {
-            border-color: #2563eb;
+        input:focus, textarea:focus, select:focus {
+            border-color: #ff5900;
             background: #fff;
             outline: none;
         }
@@ -164,12 +224,12 @@ $page_title = 'Checkout | ' . $site_name;
             gap: 0.5rem;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, #ff5900 0%, #e64f00 100%);
             color: white;
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 10px 25px rgba(255, 89, 0, 0.3);
         }
         .btn-secondary {
             background: #f1f5f9;
@@ -203,18 +263,18 @@ $page_title = 'Checkout | ' . $site_name;
         .region-tab {
             padding: 0.75rem 1.25rem;
             border-radius: 9999px;
-            border: 2px solid #cbd5f5;
+            border: 2px solid #fed7aa;
             background: #fff;
-            color: #1d4ed8;
+            color: #e64f00;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
         }
         .region-tab.active {
-            background: #1d4ed8;
-            border-color: #1d4ed8;
+            background: #e64f00;
+            border-color: #e64f00;
             color: #fff;
-            box-shadow: 0 10px 25px rgba(29,78,216,0.25);
+            box-shadow: 0 10px 25px rgba(230,79,0,0.25);
         }
         .payment-panels {
             display: grid;
@@ -256,7 +316,7 @@ $page_title = 'Checkout | ' . $site_name;
             align-items: center;
             gap: 0.6rem;
             border: none;
-            background: #2563eb;
+            background: #ff5900;
             color: #fff;
             font-weight: 700;
             padding: 0.9rem 1.5rem;
@@ -269,7 +329,7 @@ $page_title = 'Checkout | ' . $site_name;
         }
         .pay-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(37,99,235,0.35);
+            box-shadow: 0 12px 30px rgba(255,89,0,0.35);
         }
         .pay-button[disabled] {
             opacity: 0.6;
@@ -308,7 +368,7 @@ $page_title = 'Checkout | ' . $site_name;
             cursor: pointer;
         }
         .currency-switch button.active {
-            background: #1d4ed8;
+            background: #e64f00;
             color: #fff;
         }
         .total-line {
@@ -347,7 +407,7 @@ $page_title = 'Checkout | ' . $site_name;
             font-weight: 600;
         }
         .empty-cart-alert a {
-            color: #1d4ed8;
+            color: #e64f00;
         }
         .item-primary {
             display: flex;
@@ -386,8 +446,8 @@ $page_title = 'Checkout | ' . $site_name;
             color: #1f2937;
         }
         .qty-btn:hover {
-            background: #eff6ff;
-            color: #1d4ed8;
+            background: #ffedd5;
+            color: #e64f00;
         }
         .qty-input {
             width: 50px;
@@ -487,7 +547,33 @@ $page_title = 'Checkout | ' . $site_name;
     </style>
 </head>
 <body>
-    <?php include 'includes/header.php'; ?>
+    <!-- Minimal Checkout Header -->
+    <header class="header" style="padding: 1rem 0; border-bottom: 1px solid #e2e8f0;">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="logo">
+                    <a href="<?php echo site_url('/'); ?>" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                        <?php if (!empty($site_logo)): ?>
+                            <img src="<?php echo htmlspecialchars($site_logo); ?>" alt="<?php echo htmlspecialchars($site_name); ?>" style="max-height: 36px; width: auto;">
+                        <?php else: ?>
+                            <span style="font-size: 1.25rem; font-weight: 700; color: #ff5900;"><?php echo htmlspecialchars($site_name); ?></span>
+                        <?php endif; ?>
+                    </a>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <a href="<?php echo site_url('cart'); ?>" style="color: #64748b; text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;">
+                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                        Back to Cart
+                    </a>
+                    <span style="color: #cbd5e1;">|</span>
+                    <span style="color: #64748b; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;">
+                        <svg width="18" height="18" fill="#10b981" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                        Secure Checkout
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
 
     <section class="checkout-page">
         <div class="container">
@@ -565,6 +651,24 @@ $page_title = 'Checkout | ' . $site_name;
                     <div class="card">
                         <!-- Step 2: Customer Information -->
                         <div class="checkout-step" id="step-2" style="display: block;">
+                            <!-- Trust Badges -->
+                            <div class="checkout-trust-header" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-around; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <svg width="24" height="24" fill="#10b981" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                                        <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;">Secure Checkout</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <svg width="24" height="24" fill="#10b981" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                        <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;">Free Shipping</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <svg width="24" height="24" fill="#10b981" viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 00-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z"/></svg>
+                                        <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;">12 Month Warranty</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <h2>Customer Information</h2>
                             <div class="form-grid">
                                 <div>
@@ -572,16 +676,43 @@ $page_title = 'Checkout | ' . $site_name;
                                     <input type="text" id="customerName" placeholder="Jane Doe" required>
                                 </div>
                                 <div>
-                                    <label for="customerEmail">Email Address *</label>
-                                    <input type="email" id="customerEmail" placeholder="name@example.com" required>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                                        <label for="customerEmail" style="margin-bottom: 0;">Email Address *</label>
+                                        <span id="emailVerifyStatus" class="verify-status">Not verified</span>
+                                    </div>
+                                    <div class="input-with-action">
+                                        <input type="email" id="customerEmail" placeholder="name@example.com" required>
+                                        <button type="button" class="btn-compact" id="emailVerifyBtn">Verify Email</button>
+                                    </div>
                                 </div>
                                 <div>
-                                    <label for="customerPhone">Phone Number *</label>
-                                    <input type="tel" id="customerPhone" placeholder="+2547..." required>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                                        <label for="customerPhone" style="margin-bottom: 0;">Phone Number *</label>
+                                        <span id="phoneVerifyStatus" class="verify-status">Not verified</span>
+                                    </div>
+                                    <div class="input-with-action">
+                                        <input type="tel" id="customerPhone" placeholder="+2547..." required>
+                                        <button type="button" class="btn-compact" id="phoneOtpBtn">Send OTP</button>
+                                    </div>
+                                    <div id="phoneOtpSection" style="display: none; margin-top: 0.5rem;">
+                                        <div class="input-with-action">
+                                            <input type="text" id="phoneOtpInput" placeholder="Enter OTP">
+                                            <button type="button" class="btn-compact" id="phoneOtpVerifyBtn">Verify OTP</button>
+                                        </div>
+                                    </div>
+                                    <div id="recaptcha-container" style="display: none;"></div>
                                 </div>
                                 <div>
                                     <label for="customerCountry">Country *</label>
-                                    <input type="text" id="customerCountry" placeholder="Kenya" autocomplete="country-name" required>
+                                    <select id="customerCountry" required>
+                                        <option value="">Select your country</option>
+                                        <option value="Kenya">Kenya</option>
+                                        <option value="Tanzania">Tanzania</option>
+                                        <option value="Uganda">Uganda</option>
+                                        <option value="Rwanda">Rwanda</option>
+                                        <option value="Burundi">Burundi</option>
+                                        <option value="South Sudan">South Sudan</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-grid full" style="margin-top: 1.25rem;">
@@ -608,12 +739,12 @@ $page_title = 'Checkout | ' . $site_name;
                                 <div class="form-grid full">
                                     <div>
                                         <label for="shippingAddress">Street Address / Building *</label>
-                                        <input type="text" id="shippingAddress" placeholder="123 Main Street, Apt 4B" required>
+                                        <input type="text" id="shippingAddress" placeholder="123 Main Street, Apt 4B" required autocomplete="address-line1">
                                     </div>
                                 </div>
                                 <div>
                                     <label for="shippingCity">City / Town *</label>
-                                    <input type="text" id="shippingCity" placeholder="Nairobi" required>
+                                    <input type="text" id="shippingCity" placeholder="Nairobi" required list="shippingCityList" autocomplete="address-level2">
                                 </div>
                                 <div>
                                     <label for="shippingState">State / Region</label>
@@ -625,9 +756,26 @@ $page_title = 'Checkout | ' . $site_name;
                                 </div>
                                 <div>
                                     <label for="shippingCountry">Country *</label>
-                                    <input type="text" id="shippingCountry" placeholder="Kenya" required>
+                                    <select id="shippingCountry" required>
+                                        <option value="">Select destination country</option>
+                                        <option value="Kenya">Kenya</option>
+                                        <option value="Tanzania">Tanzania</option>
+                                        <option value="Uganda">Uganda</option>
+                                        <option value="Rwanda">Rwanda</option>
+                                        <option value="Burundi">Burundi</option>
+                                        <option value="South Sudan">South Sudan</option>
+                                    </select>
                                 </div>
                             </div>
+
+                            <datalist id="shippingCityList">
+                                <option value="Nairobi">
+                                <option value="Mombasa">
+                                <option value="Kisumu">
+                                <option value="Nakuru">
+                                <option value="Dar es Salaam">
+                                <option value="Arusha">
+                            </datalist>
                             
                             <h3 style="margin-top: 2rem;">Delivery Preferences</h3>
                             <div class="form-grid">
@@ -669,23 +817,62 @@ $page_title = 'Checkout | ' . $site_name;
 
                         <!-- Step 4: Payment -->
                         <div class="checkout-step" id="step-4" style="display: none;">
-                            <h2>Choose Payment Method</h2>
+                            <!-- Payment Trust Section -->
+                            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; border-left: 4px solid #10b981;">
+                                <div style="display: flex; align-items: start; gap: 1rem;">
+                                    <svg width="32" height="32" fill="#10b981" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                                    <div>
+                                        <h3 style="margin: 0 0 0.5rem; font-size: 1.1rem; color: #166534;">Your Payment is 100% Secure</h3>
+                                        <p style="margin: 0; font-size: 0.9rem; color: #166534;">All transactions are encrypted and processed through trusted payment gateways. Your financial information is never stored on our servers.</p>
+                                        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 600; color: #166534;">
+                                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                                SSL Encrypted
+                                            </span>
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 600; color: #166534;">
+                                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                                PCI Compliant
+                                            </span>
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 600; color: #166534;">
+                                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                                Money-Back Guarantee
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             
+                            <h2>Choose Payment Method</h2>
+                            <div style="padding: 1rem; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 4px solid #3b82f6; border-radius: 8px; margin-bottom: 1.5rem;">
+                                <p style="margin: 0; color: #1e40af; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                                    All Payments in <?php echo $checkoutCurrency; ?>
+                                </p>
+                                <p style="margin: 0.5rem 0 0 0; color: #1e3a8a; font-size: 0.875rem;">Your order total is <?php echo $currencyDetector->formatPrice($totals['total'], $checkoutCurrency); ?>. All payment methods below accept <?php echo $checkoutCurrency; ?>.</p>
+                            </div>
+                            <?php if ($isUSDCheckout): ?>
+                            <div style="padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; margin-bottom: 1.5rem;">
+                                <p style="margin: 0; color: #92400e; font-weight: 600;">💳 International Checkout (USD)</p>
+                                <p style="margin: 0.5rem 0 0 0; color: #78350f; font-size: 0.875rem;">Card payment options available for USD transactions.</p>
+                            </div>
+                            <?php else: ?>
                             <h3>Choose Payment Region</h3>
                             <div class="region-tabs" id="regionTabs">
                                 <button type="button" class="region-tab active" data-region="kenya">Kenya</button>
                                 <button type="button" class="region-tab" data-region="tanzania">Tanzania</button>
                                 <button type="button" class="region-tab" data-region="global">Global / Other</button>
                             </div>
+                            <?php endif; ?>
 
                             <div class="payment-panels">
+                            <?php if (!$isUSDCheckout): ?>
                             <div class="payment-panel active" data-region="kenya">
                                 <?php if ($mpesa_enabled): ?>
-                                <div class="payment-option" data-default-currency="KES">
+                                <div class="payment-option">
                                     <h4>Lipa na M-Pesa</h4>
                                     <p>Instant STK push to your Kenyan M-Pesa wallet. Confirm the prompt to complete payment.</p>
-                                    <span class="supporting-text">Payment currency: Kenyan Shilling (KES)</span>
-                                    <button class="pay-button" data-gateway="mpesa" data-currency="KES">
+                                    <span class="supporting-text">Accepts: KES, TZS, UGX, USD (auto-converted)</span>
+                                    <button class="pay-button" data-gateway="mpesa" data-accept-currencies="KES,TZS,UGX,USD">
                                         Pay with Lipa na M-Pesa
                                     </button>
                                 </div>
@@ -694,29 +881,31 @@ $page_title = 'Checkout | ' . $site_name;
                                 <div class="payment-option">
                                     <h4>Mobile Money (M-Pesa Kenya)</h4>
                                     <p>Quick M-Pesa payment - enter your phone number and confirm the payment prompt.</p>
-                                    <span class="supporting-text">Inline payment - stays on this page</span>
-                                    <button class="pay-button" data-gateway="flutterwave-mno" data-payment-method="mpesa" data-currency="KES">
+                                    <span class="supporting-text">Supports KES, TZS, UGX, USD</span>
+                                    <button class="pay-button" data-gateway="flutterwave-mno" data-payment-method="mpesa" data-accept-currencies="KES,TZS,UGX,USD">
                                         <i class="fas fa-mobile-alt"></i> Pay with M-Pesa
                                     </button>
                                 </div>
                                 <div class="payment-option">
                                     <h4>Cards & International Payments</h4>
                                     <p>Secure Flutterwave checkout for cards, bank transfers, USSD, and more payment methods.</p>
-                                    <span class="supporting-text">Redirects to secure payment page</span>
-                                    <button class="pay-button secondary" data-gateway="flutterwave" data-payment-options="card,banktransfer,ussd" data-currency="KES">
+                                    <span class="supporting-text">Multi-currency support</span>
+                                    <button class="pay-button secondary" data-gateway="flutterwave" data-payment-options="card,banktransfer,ussd" data-accept-currencies="KES,TZS,UGX,USD">
                                         <i class="fas fa-credit-card"></i> Pay with Cards/Bank
                                     </button>
                                 </div>
                                 <?php endif; ?>
                             </div>
+                            <?php endif; ?>
 
+                            <?php if (!$isUSDCheckout): ?>
                             <div class="payment-panel" data-region="tanzania">
                                 <?php if ($azampay_enabled): ?>
-                                <div class="payment-option" data-default-currency="TZS">
+                                <div class="payment-option">
                                     <h4>AzamPay</h4>
                                     <p>Recommended for Tanzania payments. Supports Tigo Pesa, M-Pesa, Airtel Money, and local cards.</p>
-                                    <span class="supporting-text">Payment currency: Tanzanian Shilling (TZS)</span>
-                                    <button class="pay-button" data-gateway="azampay" data-currency="TZS">
+                                    <span class="supporting-text">Accepts: TZS, KES, UGX, USD (auto-converted)</span>
+                                    <button class="pay-button" data-gateway="azampay" data-accept-currencies="TZS,KES,UGX,USD">
                                         Pay with AzamPay
                                     </button>
                                 </div>
@@ -725,29 +914,30 @@ $page_title = 'Checkout | ' . $site_name;
                                 <div class="payment-option">
                                     <h4>Mobile Money (Tanzania)</h4>
                                     <p>Quick mobile money payment - supports M-Pesa, Tigo Pesa, Airtel Money, and Halopesa.</p>
-                                    <span class="supporting-text">Inline payment - stays on this page</span>
-                                    <button class="pay-button" data-gateway="flutterwave-mno" data-payment-method="mobilemoneytz" data-currency="TZS">
+                                    <span class="supporting-text">Supports TZS, KES, UGX, USD</span>
+                                    <button class="pay-button" data-gateway="flutterwave-mno" data-payment-method="mobilemoneytz" data-accept-currencies="TZS,KES,UGX,USD">
                                         <i class="fas fa-mobile-alt"></i> Pay with Mobile Money
                                     </button>
                                 </div>
                                 <div class="payment-option">
                                     <h4>Cards & Bank Transfer</h4>
                                     <p>Secure Flutterwave checkout for local and international cards plus bank transfers.</p>
-                                    <span class="supporting-text">Redirects to secure payment page</span>
-                                    <button class="pay-button secondary" data-gateway="flutterwave" data-payment-options="card,banktransfer" data-currency="TZS">
+                                    <span class="supporting-text">Multi-currency support</span>
+                                    <button class="pay-button secondary" data-gateway="flutterwave" data-payment-options="card,banktransfer" data-accept-currencies="TZS,KES,UGX,USD">
                                         <i class="fas fa-credit-card"></i> Pay with Cards/Bank
                                     </button>
                                 </div>
                                 <?php endif; ?>
                             </div>
+                            <?php endif; ?>
 
-                            <div class="payment-panel" data-region="global">
+                            <div class="payment-panel <?php echo $isUSDCheckout ? 'active' : ''; ?>" data-region="global" <?php echo $isUSDCheckout ? 'style="display: block;"' : ''; ?>>
                                 <?php if ($pesapal_enabled): ?>
-                                <div class="payment-option" data-default-currency="KES">
+                                <div class="payment-option">
                                     <h4>Pesapal</h4>
                                     <p>Trusted East African gateway for cards, mobile wallets, and bank payments across multiple countries.</p>
-                                    <span class="supporting-text">Supports KES, USD, GBP, and more</span>
-                                    <button class="pay-button" data-gateway="pesapal">
+                                    <span class="supporting-text">Accepts: KES, TZS, UGX, USD, GBP, EUR</span>
+                                    <button class="pay-button" data-gateway="pesapal" data-accept-currencies="KES,TZS,UGX,USD,GBP,EUR">
                                         Pay with Pesapal
                                     </button>
                                 </div>
@@ -756,8 +946,8 @@ $page_title = 'Checkout | ' . $site_name;
                                 <div class="payment-option">
                                     <h4>International Card Payments</h4>
                                     <p>Accept global credit/debit cards, Apple Pay, Google Pay, and bank transfers in multiple currencies.</p>
-                                    <span class="supporting-text">Secure hosted payment page with fraud protection</span>
-                                    <button class="pay-button secondary" data-gateway="flutterwave" data-payment-options="card,banktransfer,applepay,googlepay" data-currency="USD">
+                                    <span class="supporting-text">Multi-currency with fraud protection</span>
+                                    <button class="pay-button secondary" data-gateway="flutterwave" data-payment-options="card,banktransfer,applepay,googlepay" data-accept-currencies="KES,TZS,UGX,USD,GBP,EUR">
                                         <i class="fas fa-globe"></i> Pay with International Cards
                                     </button>
                                 </div>
@@ -766,8 +956,8 @@ $page_title = 'Checkout | ' . $site_name;
                                 <div class="payment-option">
                                     <h4>PayPal</h4>
                                     <p>Fast checkout for international shoppers using PayPal balance or linked cards.</p>
-                                    <span class="supporting-text">Redirects to PayPal to authorize payment securely</span>
-                                    <button class="pay-button" data-gateway="paypal">
+                                    <span class="supporting-text">Supports USD, EUR, GBP and 20+ currencies</span>
+                                    <button class="pay-button" data-gateway="paypal" data-accept-currencies="USD,EUR,GBP,KES,TZS,UGX">
                                         Pay with PayPal
                                     </button>
                                 </div>
@@ -776,8 +966,8 @@ $page_title = 'Checkout | ' . $site_name;
                                 <div class="payment-option">
                                     <h4>Stripe Checkout</h4>
                                     <p>Global card processing with 3D Secure support and localized payment pages.</p>
-                                    <span class="supporting-text">Supports major debit and credit cards</span>
-                                    <button class="pay-button secondary" data-gateway="stripe">
+                                    <span class="supporting-text">135+ currencies supported</span>
+                                    <button class="pay-button secondary" data-gateway="stripe" data-accept-currencies="KES,TZS,UGX,USD,GBP,EUR">
                                         Pay with Stripe
                                     </button>
                                 </div>
@@ -799,71 +989,112 @@ $page_title = 'Checkout | ' . $site_name;
 
                     <div class="card order-card">
                         <h2>Order Summary</h2>
-                        <div class="currency-switch" id="currencySwitch">
-                            <button type="button" class="active" data-switch="KES">KES</button>
-                            <button type="button" data-switch="TZS">TZS</button>
-                        </div>
 
                         <div id="checkoutCartMessage" class="checkout-message" style="display:none;"></div>
 
-                        <div id="summaryKES" class="summary-group currency-block currency-KES">
-                            <div class="summary-item">
-                                <span>Subtotal</span>
-                                <span class="summary-value" data-summary="kes-subtotal">KES <?php echo number_format($totals['kes']['subtotal'], 0); ?></span>
-                            </div>
-                            <div class="summary-item">
-                                <span>VAT (16%)</span>
-                                <span class="summary-value" data-summary="kes-tax">KES <?php echo number_format($totals['kes']['tax'], 0); ?></span>
-                            </div>
-                            <div class="total-line">
-                                <span>Total</span>
-                                <span class="summary-value" data-summary="kes-total">KES <?php echo number_format($totals['kes']['total'], 0); ?></span>
-                            </div>
+                        <!-- Currency Badge -->
+                        <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; margin-bottom: 1.5rem;">
+                            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                            <span>Payment Currency: <?php echo $checkoutCurrency; ?></span>
+                            <?php if ($isUSDCheckout): ?>
+                            <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">International</span>
+                            <?php endif; ?>
                         </div>
 
-                        <div id="summaryTZS" class="summary-group currency-block currency-TZS" style="display:none;">
-                            <div class="summary-item">
-                                <span>Subtotal</span>
-                                <span class="summary-value" data-summary="tzs-subtotal">TZS <?php echo number_format($totals['tzs']['subtotal'], 0); ?></span>
-                            </div>
-                            <div class="summary-item">
-                                <span>VAT (18%)</span>
-                                <span class="summary-value" data-summary="tzs-tax">TZS <?php echo number_format($totals['tzs']['tax'], 0); ?></span>
-                            </div>
-                            <div class="total-line">
-                                <span>Total</span>
-                                <span class="summary-value" data-summary="tzs-total">TZS <?php echo number_format($totals['tzs']['total'], 0); ?></span>
-                            </div>
-                        </div>
-
-                        <div id="checkoutItemList" class="item-list">
-                            <?php foreach ($items as $productId => $item): ?>
-                                <div class="item-row" data-product-id="<?php echo $productId; ?>">
+                        <!-- Items List with Details -->
+                        <div id="checkoutItemList" class="item-list" style="margin-bottom: 1.5rem;">
+                            <?php 
+                            $totalItems = 0;
+                            foreach ($items as $productId => $item): 
+                                $totalItems += $item['quantity'];
+                                $itemPrice = $currencyDetector->getPrice($item['price_kes'], $checkoutCurrency);
+                            ?>
+                                <div class="item-row" data-product-id="<?php echo $productId; ?>" style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem;">
                                     <div class="item-primary">
-                                        <h5><?php echo htmlspecialchars($item['name']); ?></h5>
-                                        <span class="supporting-text">SKU: <?php echo htmlspecialchars($item['sku']); ?></span>
-                                        <div class="checkout-item-controls">
-                                            <div class="item-quantity">
-                                                <button class="qty-btn qty-decrease" data-product-id="<?php echo $productId; ?>">-</button>
-                                                <input type="number" class="qty-input" value="<?php echo (int)$item['quantity']; ?>" min="1" max="<?php echo $item['track_stock'] ? (int)$item['stock_quantity'] : 999; ?>" data-product-id="<?php echo $productId; ?>">
-                                                <button class="qty-btn qty-increase" data-product-id="<?php echo $productId; ?>">+</button>
-                                            </div>
-                                            <button class="item-remove" data-product-id="<?php echo $productId; ?>">Remove</button>
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                            <h5 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #1e293b;"><?php echo htmlspecialchars($item['name']); ?></h5>
+                                            <button class="item-remove" data-product-id="<?php echo $productId; ?>" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.25rem; font-size: 1.25rem;" title="Remove item">×</button>
                                         </div>
-                                    </div>
-                                    <div class="item-amounts">
-                                        <div class="item-price" data-currency-total="kes">KES <?php echo number_format($item['price_kes'] * $item['quantity'], 0); ?></div>
-                                        <div class="item-price" data-currency-total="tzs" style="display:none;">TZS <?php echo number_format($item['price_tzs'] * $item['quantity'], 0); ?></div>
+                                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem;">
+                                            <span class="supporting-text" style="font-size: 0.8rem; color: #64748b;">SKU: <?php echo htmlspecialchars($item['sku']); ?></span>
+                                            <span style="font-size: 0.8rem; color: #64748b;">•</span>
+                                            <span style="font-size: 0.8rem; color: #10b981; font-weight: 600;">
+                                                <?php if (!empty($item['track_stock'])): ?>
+                                                    <?php echo (int)$item['stock_quantity'] > 0 ? 'In Stock' : 'Backorder'; ?>
+                                                <?php else: ?>
+                                                    Available
+                                                <?php endif; ?>
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div class="item-quantity" style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <button class="qty-btn qty-decrease" data-product-id="<?php echo $productId; ?>" style="width: 28px; height: 28px; border: 1px solid #cbd5e1; background: white; border-radius: 4px; cursor: pointer; font-weight: 600; color: #64748b;">-</button>
+                                                <input type="number" class="qty-input" value="<?php echo (int)$item['quantity']; ?>" min="1" max="<?php echo $item['track_stock'] ? (int)$item['stock_quantity'] : 999; ?>" data-product-id="<?php echo $productId; ?>" style="width: 50px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.25rem; font-weight: 600;">
+                                                <button class="qty-btn qty-increase" data-product-id="<?php echo $productId; ?>" style="width: 28px; height: 28px; border: 1px solid #cbd5e1; background: white; border-radius: 4px; cursor: pointer; font-weight: 600; color: #64748b;">+</button>
+                                                <span style="font-size: 0.8rem; color: #64748b; margin-left: 0.5rem;">× <?php echo $currencyDetector->formatPrice($itemPrice, $checkoutCurrency); ?></span>
+                                            </div>
+                                            <div class="item-price" style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">
+                                                <?php echo $currencyDetector->formatPrice($itemPrice * $item['quantity'], $checkoutCurrency); ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
+                        </div>
+
+                        <!-- Summary Breakdown -->
+                        <div class="summary-group" style="border-top: 2px solid #e2e8f0; padding-top: 1.5rem;">
+                            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem; color: #78350f;">
+                                <strong>📦 <?php echo $totalItems; ?> item<?php echo $totalItems > 1 ? 's' : ''; ?></strong> in your order
+                            </div>
+                            
+                            <div class="summary-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; color: #475569;">
+                                <span>Subtotal</span>
+                                <span class="summary-value" style="font-weight: 600;"><?php echo $currencyDetector->formatPrice($totals['subtotal'], $checkoutCurrency); ?></span>
+                            </div>
+                            
+                            <div class="summary-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; color: #475569;">
+                                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>Tax (<?php echo ($totals['tax_rate'] * 100); ?>%)</span>
+                                    <?php if ($totals['tax_rate'] == 0): ?>
+                                    <span style="background: #dcfce7; color: #166534; padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Tax Free</span>
+                                    <?php endif; ?>
+                                </span>
+                                <span class="summary-value" style="font-weight: 600;"><?php echo $currencyDetector->formatPrice($totals['tax'], $checkoutCurrency); ?></span>
+                            </div>
+                            
+                            <div class="summary-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; color: #64748b; font-size: 0.9rem;">
+                                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                                    <span>Shipping</span>
+                                </span>
+                                <span style="font-style: italic;">Calculated after order</span>
+                            </div>
+                            
+                            <div class="total-line" style="display: flex; justify-content: space-between; padding: 1.25rem 0; border-top: 2px solid #e2e8f0; margin-top: 0.5rem;">
+                                <span style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">Total Amount</span>
+                                <span class="summary-value" style="font-size: 1.5rem; font-weight: 800; color: #ff5900;"><?php echo $currencyDetector->formatPrice($totals['total'], $checkoutCurrency); ?></span>
+                            </div>
+                            
+                            <?php if (!$isUSDCheckout): ?>
+                            <div style="background: #f0fdf4; border: 1px solid #86efac; padding: 0.75rem; border-radius: 6px; margin-top: 1rem; font-size: 0.85rem; color: #166534;">
+                                <strong>✓ Secure Local Payment</strong> - Pay with M-Pesa, Mobile Money, or local cards
+                            </div>
+                            <?php else: ?>
+                            <div style="background: #eff6ff; border: 1px solid #93c5fd; padding: 0.75rem; border-radius: 6px; margin-top: 1rem; font-size: 0.85rem; color: #1e40af;">
+                                <strong>🌍 International Checkout</strong> - Secure card payment with fraud protection
+                            </div>
+                            <?php endif; ?>
                         </div>
 
                         <div id="checkoutEmptyNotice" class="empty-cart-alert" style="display:none;">
                             <p>Your cart is empty. <a href="products.php">Add products</a> to continue checkout.</p>
                         </div>
 
-                        <a href="cart.php" style="display:inline-block;margin-top:2rem;font-weight:600;color:#2563eb;">← Modify cart</a>
+                        <a href="cart.php" style="display:inline-flex; align-items:center; gap:0.5rem; margin-top:1.5rem; font-weight:600; color:#ff5900; text-decoration: none;">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                            Modify cart
+                        </a>
                     </div>
                 </div>
             <?php endif; ?>
@@ -1003,7 +1234,7 @@ $page_title = 'Checkout | ' . $site_name;
         }
         .form-control:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color: #ff5900;
         }
         .form-text {
             display: block;
@@ -1024,7 +1255,7 @@ $page_title = 'Checkout | ' . $site_name;
             font-size: 1.125rem;
         }
         .summary-row strong {
-            color: #2563eb;
+            color: #ff5900;
             font-size: 1.5rem;
         }
         .mno-modal-actions {
@@ -1041,14 +1272,14 @@ $page_title = 'Checkout | ' . $site_name;
             transition: all 0.2s;
         }
         .btn-primary {
-            background: #2563eb;
+            background: #ff5900;
             color: white;
             border: none;
         }
         .btn-primary:hover {
-            background: #1d4ed8;
+            background: #e64f00;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 4px 12px rgba(255, 89, 0, 0.4);
         }
         .btn-secondary {
             background: #f1f5f9;
@@ -1062,7 +1293,7 @@ $page_title = 'Checkout | ' . $site_name;
             text-align: center;
             font-size: 4rem;
             margin-bottom: 1rem;
-            color: #2563eb;
+            color: #ff5900;
         }
         #mnoPaymentStatus {
             text-align: center;
@@ -1077,42 +1308,48 @@ $page_title = 'Checkout | ' . $site_name;
         }
     </style>
 
-    <footer class="footer">
+    <!-- Minimal Footer -->
+    <footer style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 2rem 0; margin-top: 4rem;">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-col">
-                    <h3>ProCut Solutions</h3>
-                    <p>Professional printing equipment supplier serving Kenya and Tanzania.</p>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; text-align: center;">
+                <div style="flex: 1; min-width: 200px;">
+                    <p style="margin: 0; color: #64748b; font-size: 0.875rem;">&copy; <?php echo date('Y'); ?> ProCut Solutions. All rights reserved.</p>
                 </div>
-                <div class="footer-col">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="products.php">Products</a></li>
-                        <li><a href="cart.php">Cart</a></li>
-                        <li><a href="index.php#contact">Contact</a></li>
-                    </ul>
+                <div style="flex: 1; min-width: 200px; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;">
+                        <svg width="16" height="16" fill="#10b981" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                        SSL Encrypted
+                    </span>
+                    <span style="color: #64748b; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;">
+                        <svg width="16" height="16" fill="#10b981" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        PCI Compliant
+                    </span>
                 </div>
-                <div class="footer-col">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li>Tanzania: <a href="tel:+255753098911">+255 753 098 911</a></li>
-                        <li>Kenya: <a href="tel:+254716522828">+254 716 522 828</a></li>
-                        <li><a href="mailto:support@procutsolutions.com">support@procutsolutions.com</a></li>
-                    </ul>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="display: flex; justify-content: center; gap: 1rem; font-size: 0.875rem;">
+                        <span style="color: #64748b;">Need help?</span>
+                        <a href="tel:+255753098911" style="color: #ff5900; text-decoration: none;">📞 Call</a>
+                        <a href="https://wa.me/255753098911" style="color: #ff5900; text-decoration: none;" target="_blank">💬 WhatsApp</a>
+                    </div>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> ProCut Solutions. All rights reserved.</p>
             </div>
         </div>
     </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-auth.js"></script>
 
     <script>
         // ==========================================
         // STEP NAVIGATION & PROGRESS BAR
         // ==========================================
         let currentStep = 2; // Start at step 2 (Customer Information)
+        const firebaseConfigData = <?php echo json_encode($firebase_config ?? []); ?>;
+        const firebaseEnabled = !!(firebaseConfigData && firebaseConfigData.enabled);
+        let emailVerified = false;
+        let phoneVerified = false;
+        let phoneOtpSent = false;
         
         function goToStep(stepNumber) {
             // Validate current step before proceeding
@@ -1155,6 +1392,17 @@ $page_title = 'Checkout | ' . $site_name;
                 if (!emailRegex.test(email)) {
                     alert('Please enter a valid email address');
                     return false;
+                }
+
+                if (firebaseEnabled) {
+                    if (!emailVerified) {
+                        alert('Please verify your email via Firebase before continuing.');
+                        return false;
+                    }
+                    if (!phoneVerified) {
+                        alert('Please verify your phone number via Firebase before continuing.');
+                        return false;
+                    }
                 }
                 
                 return true;
@@ -1212,6 +1460,9 @@ $page_title = 'Checkout | ' . $site_name;
             'count' => $cart->getItemCount(),
         ]); ?> || { totals: {}, items: {}, count: 0 };
 
+        const CHECKOUT_CSRF = '<?php echo $checkout_csrf; ?>';
+        const CART_HASH = '<?php echo $checkout_cart_hash; ?>';
+
         const currencyMeta = {
             kes: { code: 'KES', locale: 'en-KE' },
             tzs: { code: 'TZS', locale: 'en-TZ' }
@@ -1227,6 +1478,13 @@ $page_title = 'Checkout | ' . $site_name;
         const emptyNotice = document.getElementById('checkoutEmptyNotice');
         const messageArea = document.getElementById('paymentMessage');
         const validationAlert = document.querySelector('.alert.alert-warning');
+        const emailVerifyBtn = document.getElementById('emailVerifyBtn');
+        const emailVerifyStatus = document.getElementById('emailVerifyStatus');
+        const phoneOtpBtn = document.getElementById('phoneOtpBtn');
+        const phoneOtpVerifyBtn = document.getElementById('phoneOtpVerifyBtn');
+        const phoneOtpSection = document.getElementById('phoneOtpSection');
+        const phoneOtpInput = document.getElementById('phoneOtpInput');
+        const phoneVerifyStatus = document.getElementById('phoneVerifyStatus');
 
         const customerInputs = {
             name: document.getElementById('customerName'),
@@ -1587,38 +1845,112 @@ $page_title = 'Checkout | ' . $site_name;
             return customerInputs[field] ? customerInputs[field].value.trim() : '';
         }
 
-        async function detectLocation() {
-            if (!customerInputs.country) {
+        function setVerifyStatus(el, state, text) {
+            if (!el) return;
+            el.classList.remove('success', 'error', 'pending');
+            if (state) {
+                el.classList.add(state);
+            }
+            el.textContent = text;
+        }
+
+        function ensureFirebaseReady() {
+            if (!firebaseEnabled) {
+                setVerifyStatus(emailVerifyStatus, 'error', 'Firebase disabled');
+                setVerifyStatus(phoneVerifyStatus, 'error', 'Firebase disabled');
+                return false;
+            }
+            return true;
+        }
+
+        if (firebaseEnabled) {
+            initializeFirebase(firebaseConfigData);
+            setVerifyStatus(emailVerifyStatus, 'pending', 'Awaiting verification');
+            setVerifyStatus(phoneVerifyStatus, 'pending', 'Awaiting verification');
+        } else {
+            setVerifyStatus(emailVerifyStatus, 'error', 'Firebase disabled');
+            setVerifyStatus(phoneVerifyStatus, 'error', 'Firebase disabled');
+        }
+
+        async function handleEmailVerification() {
+            if (!ensureFirebaseReady()) return;
+            const email = getInputValue('email');
+            if (!email) {
+                setVerifyStatus(emailVerifyStatus, 'error', 'Enter email first');
                 return;
             }
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                if (!response.ok) {
-                    throw new Error('Failed to detect location');
-                }
-                const data = await response.json();
-                if (data.country) {
-                    customerInputs.country.value = data.country_name || data.country;
-                    selectedCountryCode = data.country_code || '';
-                    if (selectedCountryCode === 'KE') {
-                        setRegion('kenya');
-                        if (customerInputs.phone) {
-                            customerInputs.phone.placeholder = '+2547...';
-                        }
-                    } else if (selectedCountryCode === 'TZ') {
-                        setRegion('tanzania');
-                        if (customerInputs.phone) {
-                            customerInputs.phone.placeholder = '+2557...';
-                        }
-                    } else {
-                        setRegion('global');
-                    }
-                }
-            } catch (error) {
-                console.warn('Geolocation lookup failed', error);
+            setVerifyStatus(emailVerifyStatus, 'pending', 'Sending verification link...');
+            const result = await sendEmailVerification(email);
+            if (result?.success) {
+                emailVerified = true;
+                setVerifyStatus(emailVerifyStatus, 'success', 'Verification link sent');
+                alert('Verification link sent to your email. Complete it to finalize verification.');
+            } else {
+                setVerifyStatus(emailVerifyStatus, 'error', result?.message || 'Email verification failed');
             }
         }
 
+        async function handleSendPhoneOtp() {
+            if (!ensureFirebaseReady()) return;
+            const phone = getInputValue('phone');
+            if (!phone) {
+                setVerifyStatus(phoneVerifyStatus, 'error', 'Enter phone first');
+                return;
+            }
+            setVerifyStatus(phoneVerifyStatus, 'pending', 'Sending OTP...');
+            const recaptchaContainer = document.getElementById('recaptcha-container');
+            if (recaptchaContainer) {
+                recaptchaContainer.style.display = 'block';
+            }
+            const result = await sendPhoneOTP(phone);
+            if (result?.success) {
+                phoneOtpSent = true;
+                if (phoneOtpSection) {
+                    phoneOtpSection.style.display = 'block';
+                }
+                setVerifyStatus(phoneVerifyStatus, 'pending', 'OTP sent. Check your phone.');
+            } else {
+                setVerifyStatus(phoneVerifyStatus, 'error', result?.message || 'OTP send failed');
+            }
+        }
+
+        async function handleVerifyPhoneOtp() {
+            if (!ensureFirebaseReady()) return;
+            if (!phoneOtpSent) {
+                setVerifyStatus(phoneVerifyStatus, 'error', 'Send OTP first');
+                return;
+            }
+            const otp = phoneOtpInput ? phoneOtpInput.value.trim() : '';
+            if (!otp) {
+                setVerifyStatus(phoneVerifyStatus, 'error', 'Enter the OTP');
+                return;
+            }
+            setVerifyStatus(phoneVerifyStatus, 'pending', 'Verifying OTP...');
+            const result = await verifyPhoneOTP(otp);
+            if (result?.success) {
+                phoneVerified = true;
+                if (phoneOtpSection) {
+                    phoneOtpSection.style.display = 'none';
+                }
+                setVerifyStatus(phoneVerifyStatus, 'success', 'Phone verified');
+            } else {
+                setVerifyStatus(phoneVerifyStatus, 'error', result?.message || 'OTP verification failed');
+            }
+        }
+
+        if (emailVerifyBtn) {
+            emailVerifyBtn.addEventListener('click', handleEmailVerification);
+        }
+
+        if (phoneOtpBtn) {
+            phoneOtpBtn.addEventListener('click', handleSendPhoneOtp);
+        }
+
+        if (phoneOtpVerifyBtn) {
+            phoneOtpVerifyBtn.addEventListener('click', handleVerifyPhoneOtp);
+        }
+
+        // Removed external IP geolocation call for privacy/latency; country selection is user-driven
         if (customerInputs.country) {
             customerInputs.country.addEventListener('change', () => {
                 const value = customerInputs.country.value.toLowerCase();
@@ -1648,19 +1980,25 @@ $page_title = 'Checkout | ' . $site_name;
                 return;
             }
             
-            const forcedCurrency = button.dataset.currency;
-            if (forcedCurrency && forcedCurrency !== selectedCurrency) {
-                setCurrency(forcedCurrency);
+            // Use selected currency from cart, validate against accepted currencies
+            const acceptedCurrencies = button.dataset.acceptCurrencies ? button.dataset.acceptCurrencies.split(',') : [];
+            const currentCurrency = selectedCurrency || '<?php echo $checkoutCurrency; ?>';
+            
+            if (acceptedCurrencies.length > 0 && !acceptedCurrencies.includes(currentCurrency)) {
+                showPaymentMessage('error', `This payment method does not support ${currentCurrency}. Accepted currencies: ${acceptedCurrencies.join(', ')}`);
+                return;
             }
 
             const payload = {
                 gateway,
-                currency: forcedCurrency || selectedCurrency,
+                currency: currentCurrency,
                 country_code: selectedCountryCode,
                 customer_name: getInputValue('name'),
                 customer_email: getInputValue('email'),
                 customer_phone: getInputValue('phone'),
-                notes: getInputValue('notes')
+                notes: getInputValue('notes'),
+                csrf_token: CHECKOUT_CSRF,
+                cart_hash: CART_HASH
             };
 
             if (button.dataset.paymentOptions) {
@@ -1801,7 +2139,9 @@ $page_title = 'Checkout | ' . $site_name;
                 customer_name: getInputValue('name'),
                 customer_email: getInputValue('email'),
                 customer_phone: getInputValue('phone'),
-                notes: getInputValue('notes')
+                notes: getInputValue('notes'),
+                csrf_token: CHECKOUT_CSRF,
+                cart_hash: CART_HASH
             };
             
             try {

@@ -7,7 +7,13 @@ require_once 'includes/auth.php';
 // Redirect if already logged in
 $auth = new AdminAuth();
 if ($auth->isAuthenticated()) {
-    redirect('dashboard.php');
+    $user = $auth->getCurrentUser();
+    // Redirect support agents to their landing page
+    if ($user['role'] === 'support_agent') {
+        redirect('support-tickets.php');
+    } else {
+        redirect('dashboard.php');
+    }
 }
 
 $error = '';
@@ -28,7 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $auth->login($username, $password, $rememberMe);
             
             if ($result['success']) {
-                redirect('dashboard.php', 'Welcome back!', 'success');
+                // Redirect based on user role
+                $user = $auth->getCurrentUser();
+                if ($user['role'] === 'support_agent') {
+                    redirect('support-tickets.php', 'Welcome back!', 'success');
+                } else {
+                    redirect('dashboard.php', 'Welcome back!', 'success');
+                }
             } else {
                 $error = $result['message'];
             }

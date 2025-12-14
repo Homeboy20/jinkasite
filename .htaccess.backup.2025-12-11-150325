@@ -1,0 +1,26 @@
+# Hide .php extension and allow clean URLs
+RewriteEngine On
+
+# Redirect requests with .php extension to extensionless, excluding API endpoints
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+RewriteCond %{REQUEST_METHOD} GET
+RewriteCond %1 !^process_payment$ [NC]
+RewriteCond %1 !^payment-callback/ [NC]
+RewriteCond %1 !^admin/ [NC]
+RewriteRule ^/?$ /%1 [R=302,L]
+
+# Serve extensionless URLs by internally mapping to .php files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.+?)/?$ $1.php [L]
+
+
+# Force HTTPS (enable once SSL certificate is configured)
+#RewriteCond %{HTTP_HOST} !^localhost$ [NC]
+#RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$ [NC]
+#RewriteCond %{HTTP_HOST} !^192\.168\.[0-9\.]+$ [NC]
+#RewriteCond %{HTTPS} off
+#RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Security headers (enable in server config if mod_headers is available)

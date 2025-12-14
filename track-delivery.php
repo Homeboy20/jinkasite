@@ -2,7 +2,46 @@
 if (!defined('JINKA_ACCESS')) {
     define('JINKA_ACCESS', true);
 }
+require_once 'includes/config.php';
 require_once 'admin/includes/Database.php';
+
+// Header/Footer Configuration
+$site_name = site_setting('site_name', 'ProCut Solutions');
+$site_logo = site_setting('site_logo', '');
+$site_favicon_setting = trim(site_setting('site_favicon', ''));
+$default_favicon_path = 'images/favicon.ico';
+$site_favicon = '';
+if ($site_favicon_setting !== '') {
+    if (preg_match('#^https?://#i', $site_favicon_setting)) {
+        $site_favicon = $site_favicon_setting;
+    } else {
+        $site_favicon = site_url($site_favicon_setting);
+    }
+} elseif (file_exists(__DIR__ . '/' . $default_favicon_path)) {
+    $site_favicon = site_url($default_favicon_path);
+}
+$site_tagline = site_setting('site_tagline', 'Professional Printing Equipment');
+$business_name = $site_name;
+$whatsapp_number = site_setting('whatsapp_number', '+255753098911');
+$phone = site_setting('contact_phone', '+255753098911');
+$phone_number = $phone;
+$phone_number_ke = site_setting('contact_phone_ke', '+254716522828');
+$email = site_setting('contact_email', 'support@procutsolutions.com');
+$whatsapp_number_link = preg_replace('/[^0-9]/', '', $whatsapp_number);
+$footer_logo = site_setting('footer_logo', $site_logo);
+$footer_about = site_setting('footer_about', 'Professional printing equipment supplier.');
+$footer_address = site_setting('footer_address', 'Kenya & Tanzania');
+$footer_phone_label_tz = site_setting('footer_phone_label_tz', 'Tanzania');
+$footer_phone_label_ke = site_setting('footer_phone_label_ke', 'Kenya');
+$footer_hours_weekday = site_setting('footer_hours_weekday', '8:00 AM - 6:00 PM');
+$footer_hours_saturday = site_setting('footer_hours_saturday', '9:00 AM - 4:00 PM');
+$footer_hours_sunday = site_setting('footer_hours_sunday', 'Closed');
+$footer_whatsapp_label = site_setting('footer_whatsapp_label', '24/7 Available');
+$footer_copyright = site_setting('footer_copyright', '');
+$facebook_url = trim(site_setting('facebook_url', ''));
+$instagram_url = trim(site_setting('instagram_url', ''));
+$twitter_url = trim(site_setting('twitter_url', ''));
+$linkedin_url = trim(site_setting('linkedin_url', ''));
 
 $db = Database::getInstance()->getConnection();
 $tracking_number = $_GET['tracking'] ?? '';
@@ -42,12 +81,21 @@ if ($tracking_number) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Your Delivery - JINKA Plotters</title>
-    <link href="css/style.css" rel="stylesheet">
+    <title>Track Your Delivery - <?php echo $site_name; ?></title>
+    <?php if (!empty($site_favicon)): ?>
+    <link rel="icon" href="<?php echo htmlspecialchars($site_favicon); ?>">
+    <?php endif; ?>
+    <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/header-modern.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/theme-variables.php?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/responsive-global.css?v=<?php echo time(); ?>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ff5900;
             min-height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -99,7 +147,7 @@ if ($tracking_number) {
 
         .search-btn {
             padding: 1rem 2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ff5900;
             color: white;
             border: none;
             border-radius: 8px;
@@ -217,8 +265,8 @@ if ($tracking_number) {
         }
 
         .timeline-item.active .timeline-marker {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
+            background: #ff5900;
+            border-color: #ff5900;
         }
 
         .timeline-content {
@@ -246,7 +294,7 @@ if ($tracking_number) {
 
         /* Driver Info */
         .driver-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ff5900;
             color: white;
             padding: 2rem;
             border-radius: 12px;
@@ -320,6 +368,9 @@ if ($tracking_number) {
     </style>
 </head>
 <body>
+<?php include 'includes/header.php'; ?>
+
+<div class="tracking-page" style="padding: 2rem 0; background: #ff5900; min-height: calc(100vh - 200px);">
     <div class="tracking-container">
         <!-- Search Form -->
         <div class="tracking-search">
@@ -504,5 +555,9 @@ if ($tracking_number) {
             </a>
         </div>
     </div>
+</div>
+
+<?php include 'includes/footer.php'; ?>
 </body>
 </html>
+

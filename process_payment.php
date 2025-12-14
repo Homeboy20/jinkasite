@@ -9,6 +9,10 @@ require_once __DIR__ . '/includes/payments/PaymentGatewayManager.php';
 
 header('Content-Type: application/json');
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
@@ -29,6 +33,13 @@ $customer = [
     'email' => trim($input['customer_email'] ?? ''),
     'phone' => trim($input['customer_phone'] ?? ''),
 ];
+$csrfToken = $input['csrf_token'] ?? '';
+
+if (empty($_SESSION['checkout_csrf']) || !hash_equals($_SESSION['checkout_csrf'], $csrfToken)) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Security check failed. Please refresh and try again.']);
+    exit;
+}
 
 if (!$gateway) {
     echo json_encode(['success' => false, 'error' => 'Select a payment method.']);
@@ -43,6 +54,30 @@ if (empty($customer['name']) || empty($customer['email']) || empty($customer['ph
 $cart = new Cart();
 $totals = $cart->getTotals();
 $currencyKey = strtolower($currency);
+$cartItems = $cart->getItems();
+
+if (!function_exists('compute_cart_hash')) {
+    function compute_cart_hash(array $items, array $totals) {
+        $sortedItems = $items;
+        if (!empty($sortedItems)) {
+            ksort($sortedItems);
+        }
+        return hash_hmac(
+            'sha256',
+            json_encode(['items' => $sortedItems, 'totals' => $totals], JSON_UNESCAPED_SLASHES),
+            SECRET_KEY
+        );
+    }
+}
+
+$inputCartHash = $input['cart_hash'] ?? '';
+$expectedCartHash = compute_cart_hash($cartItems, $totals);
+$sessionCartHash = $_SESSION['checkout_cart_hash'] ?? '';
+
+if (empty($inputCartHash) || !hash_equals($expectedCartHash, $inputCartHash) || ($sessionCartHash && !hash_equals($sessionCartHash, $inputCartHash))) {
+    echo json_encode(['success' => false, 'error' => 'Cart changed during checkout. Please refresh and try again.']);
+    exit;
+}
 
 if (empty($totals['item_count'])) {
     echo json_encode(['success' => false, 'error' => 'Your cart is empty.']);

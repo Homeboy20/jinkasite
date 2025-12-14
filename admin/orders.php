@@ -5,7 +5,7 @@ if (!defined('JINKA_ACCESS')) {
 require_once 'includes/auth.php';
 
 // Require authentication
-$auth = requireAuth('admin');
+$auth = requireAuth('support_agent');
 $currentUser = $auth->getCurrentUser();
 
 $db = Database::getInstance()->getConnection();
@@ -41,16 +41,22 @@ if ($_POST) {
             $messageType = 'error';
         }
     } elseif ($action === 'delete') {
-        $id = (int)$_POST['id'];
-        $stmt = $db->prepare("DELETE FROM orders WHERE id = ?");
-        $stmt->bind_param('i', $id);
-        
-        if ($stmt->execute()) {
-            $message = 'Order deleted successfully!';
-            $messageType = 'success';
-        } else {
-            $message = 'Error deleting order: ' . $db->error;
+        // Only admins can delete
+        if (!$auth->hasRole('admin')) {
+            $message = 'You do not have permission to delete orders';
             $messageType = 'error';
+        } else {
+            $id = (int)$_POST['id'];
+            $stmt = $db->prepare("DELETE FROM orders WHERE id = ?");
+            $stmt->bind_param('i', $id);
+            
+            if ($stmt->execute()) {
+                $message = 'Order deleted successfully!';
+                $messageType = 'success';
+            } else {
+                $message = 'Error deleting order: ' . $db->error;
+                $messageType = 'error';
+            }
         }
     }
 }
@@ -551,12 +557,14 @@ if (isset($_GET['view'])) {
                                                     <div class="action-buttons">
                                                         <a href="orders.php?view=<?= $order['id'] ?>" 
                                                            class="btn btn-sm btn-info">View</a>
+                                                        <?php if ($auth->hasRole('admin')): ?>
                                                         <form method="POST" style="display: inline;" 
                                                               onsubmit="return confirm('Are you sure you want to delete this order?')">
                                                             <input type="hidden" name="action" value="delete">
                                                             <input type="hidden" name="id" value="<?= $order['id'] ?>">
                                                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                                         </form>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </td>
                                             </tr>

@@ -4,12 +4,18 @@ if (!defined('JINKA_ACCESS')) {
 }
 require_once 'includes/config.php';
 require_once 'includes/Cart.php';
+require_once 'includes/CurrencyDetector.php';
 
 $cart = new Cart();
 $items = $cart->getItems();
 $totals = $cart->getTotals();
 $validation = $cart->validateCart();
 $itemCount = $cart->getItemCount();
+
+// Get current currency for display
+$currencyDetector = CurrencyDetector::getInstance();
+$currentCurrency = $totals['currency'] ?? 'KES';
+$currencySymbol = $totals['symbol'] ?? 'KSh';
 
 $site_name = site_setting('site_name', 'ProCut Solutions');
 $site_logo = site_setting('site_logo', '');
@@ -27,9 +33,30 @@ if ($site_favicon_setting !== '') {
     $site_favicon = site_url($default_favicon_path);
 }
 $site_tagline = site_setting('site_tagline', 'Professional Printing Equipment');
+$business_name = $site_name;
 $contact_phone = site_setting('contact_phone', '+255753098911');
 $contact_phone_ke = site_setting('contact_phone_ke', $contact_phone);
 $whatsapp_number = site_setting('whatsapp_number', '+255753098911');
+$phone_number = $contact_phone;
+$phone_number_ke = $contact_phone_ke;
+$email = site_setting('contact_email', 'support@procutsolutions.com');
+
+$facebook_url = trim(site_setting('facebook_url', ''));
+$instagram_url = trim(site_setting('instagram_url', ''));
+$twitter_url = trim(site_setting('twitter_url', ''));
+$linkedin_url = trim(site_setting('linkedin_url', ''));
+
+// Footer Configuration
+$footer_logo = site_setting('footer_logo', $site_logo);
+$footer_about = site_setting('footer_about', 'Professional printing equipment supplier serving Kenya and Tanzania. Quality products, expert support, and competitive pricing for all your printing needs.');
+$footer_address = site_setting('footer_address', 'Kenya & Tanzania');
+$footer_phone_label_tz = site_setting('footer_phone_label_tz', 'Tanzania');
+$footer_phone_label_ke = site_setting('footer_phone_label_ke', 'Kenya');
+$footer_hours_weekday = site_setting('footer_hours_weekday', '8:00 AM - 6:00 PM');
+$footer_hours_saturday = site_setting('footer_hours_saturday', '9:00 AM - 4:00 PM');
+$footer_hours_sunday = site_setting('footer_hours_sunday', 'Closed');
+$footer_whatsapp_label = site_setting('footer_whatsapp_label', '24/7 Available');
+$footer_copyright = site_setting('footer_copyright', '');
 
 $contact_phone_link = preg_replace('/[^0-9+]/', '', $contact_phone);
 if ($contact_phone_link !== '' && $contact_phone_link[0] !== '+') {
@@ -49,29 +76,55 @@ $page_title = "Shopping Cart | " . $site_name;
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
     <title><?php echo $page_title; ?></title>
     <?php if (!empty($site_favicon)): ?>
     <link rel="icon" href="<?php echo htmlspecialchars($site_favicon); ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/header-modern.css">
+    <link rel="stylesheet" href="css/theme-variables.php">
+    <link rel="stylesheet" href="css/cart-responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #eef2ff;
             color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        button, a {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .cart-page {
             padding: 4rem 0 6rem;
             background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            transition: padding 0.3s ease;
         }
 
         .cart-shell {
             width: min(1100px, 100%);
             margin: 0 auto;
             padding: 0 1.5rem;
+            transition: padding 0.3s ease;
         }
 
         .cart-header {
@@ -179,9 +232,9 @@ $page_title = "Shopping Cart | " . $site_name;
         }
 
         .cart-message.info {
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-            color: #1d4ed8;
-            border-color: rgba(96, 165, 250, 0.45);
+            background: linear-gradient(135deg, #ffedd5, #fed7aa);
+            color: #e64f00;
+            border-color: rgba(255, 89, 0, 0.45);
         }
 
         #cartLayout.cart-content {
@@ -271,7 +324,7 @@ $page_title = "Shopping Cart | " . $site_name;
         }
 
         .item-name a:hover {
-            color: #2563eb;
+            color: #ff5900;
         }
 
         .item-sku {
@@ -346,8 +399,8 @@ $page_title = "Shopping Cart | " . $site_name;
         }
 
         .qty-btn:hover {
-            background: rgba(99, 102, 241, 0.1);
-            color: #2563eb;
+            background: rgba(255, 89, 0, 0.1);
+            color: #ff5900;
         }
 
         .qty-input {
@@ -449,10 +502,10 @@ $page_title = "Shopping Cart | " . $site_name;
         }
 
         .currency-tab.active {
-            background: linear-gradient(135deg, #6366f1, #2563eb);
+            background: linear-gradient(135deg, #ff5900, #e64f00);
             border-color: transparent;
             color: white;
-            box-shadow: 0 15px 30px -20px rgba(79, 70, 229, 0.45);
+            box-shadow: 0 15px 30px -20px rgba(255, 89, 0, 0.45);
         }
 
         .summary-totals {
@@ -494,10 +547,10 @@ $page_title = "Shopping Cart | " . $site_name;
         .support-card {
             border-radius: 16px;
             padding: 1.15rem 1.2rem;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(59, 130, 246, 0.1));
-            border: 1px solid rgba(99, 102, 241, 0.2);
+            background: linear-gradient(135deg, rgba(255, 89, 0, 0.1), rgba(230, 79, 0, 0.1));
+            border: 1px solid rgba(255, 89, 0, 0.2);
             font-size: 0.9rem;
-            color: #1d4ed8;
+            color: #e64f00;
         }
 
         .support-card a {
@@ -508,7 +561,7 @@ $page_title = "Shopping Cart | " . $site_name;
         .checkout-btn {
             width: 100%;
             padding: 1rem 1.25rem;
-            background: linear-gradient(135deg, #6366f1, #2563eb);
+            background: linear-gradient(135deg, #ff5900, #e64f00);
             color: white;
             border: none;
             border-radius: 14px;
@@ -520,7 +573,7 @@ $page_title = "Shopping Cart | " . $site_name;
 
         .checkout-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 20px 45px -25px rgba(79, 70, 229, 0.55);
+            box-shadow: 0 20px 45px -25px rgba(255, 89, 0, 0.55);
         }
 
         .checkout-btn:disabled {
@@ -542,7 +595,7 @@ $page_title = "Shopping Cart | " . $site_name;
         }
 
         .continue-shopping:hover {
-            color: #2563eb;
+            color: #ff5900;
         }
 
         .empty-cart {
@@ -597,9 +650,9 @@ $page_title = "Shopping Cart | " . $site_name;
         }
 
         .empty-cart .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #2563eb);
+            background: linear-gradient(135deg, #ff5900, #e64f00);
             color: white;
-            box-shadow: 0 18px 40px -30px rgba(79, 70, 229, 0.55);
+            box-shadow: 0 18px 40px -30px rgba(255, 89, 0, 0.55);
         }
 
         .empty-cart .btn-primary:hover {
@@ -608,100 +661,431 @@ $page_title = "Shopping Cart | " . $site_name;
 
         .empty-cart .btn-outline {
             background: white;
-            border: 1px solid #cbd5f5;
-            color: #1d4ed8;
+            border: 1px solid #fed7aa;
+            color: #e64f00;
         }
 
-        .site-footer {
-            background: #0f172a;
-            color: #e2e8f0;
-            padding: 4rem 0 3rem;
+        /* Footer - Modern Design */
+        .footer {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 5rem 0 0;
+            position: relative;
+            overflow: hidden;
         }
 
-        .site-footer a {
-            color: inherit;
-            text-decoration: none;
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff5900, #8b5cf6, #ec4899);
         }
 
-        .site-footer a:hover {
-            color: #60a5fa;
-        }
-
-        .footer-inner {
-            width: min(1100px, 100%);
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        }
-
-        .footer-columns {
+        .footer-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 2.5rem;
+            grid-template-columns: 2fr 1.2fr 1.2fr 1.5fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 2rem;
             align-items: start;
-            margin-bottom: 2rem;
         }
 
-        .footer-col h3,
+        .footer-col {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer-col-brand {
+            padding-right: 1rem;
+        }
+
+        .footer-logo {
+            margin-bottom: 1.25rem;
+        }
+
+        .footer-logo-img {
+            max-width: 200px;
+            height: auto;
+            max-height: 70px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .footer-col h3 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin: 0 0 1.25rem 0;
+            color: white;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: capitalize;
+            line-height: 1.2;
+        }
+
         .footer-col h4 {
-            margin-bottom: 0.85rem;
+            font-size: 1rem;
             font-weight: 700;
+            margin: 0 0 1.75rem 0;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
+        .footer-col h4::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff5900, #8b5cf6);
+            border-radius: 2px;
+        }
+
+        .footer-col p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.8;
+            margin: 0 0 1.75rem 0;
         }
 
         .footer-col ul {
             list-style: none;
+            font-size: 0.95rem;
             padding: 0;
             margin: 0;
-            display: grid;
+            display: flex;
+            flex-direction: column;
+            gap: 0.875rem;
+        }
+
+        .footer-col ul li {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.75);
+            position: relative;
+            padding-left: 0;
+            transition: all 0.3s ease;
+        }
+
+        .footer-col ul li:hover {
+            transform: translateX(5px);
+        }
+
+        .footer-col a {
+            color: rgba(255, 255, 255, 0.75);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
             gap: 0.5rem;
-            font-size: 0.95rem;
+        }
+
+        .footer-col a:hover {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        .footer-col ul li a::before {
+            content: '→';
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+
+        .footer-col ul li a:hover::before {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-social a {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-social a::before {
+            display: none !important;
+        }
+
+        .footer-social a:hover {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            border-color: transparent;
         }
 
         .footer-bottom {
-            border-top: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2rem 0;
             margin-top: 3rem;
-            padding-top: 1.5rem;
-            text-align: center;
-            font-size: 0.85rem;
-            color: rgba(226, 232, 240, 0.7);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-bottom-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .footer-bottom p {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin: 0;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-bottom-links a {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-bottom-links a::before {
+            display: none !important;
+        }
+
+        .footer-bottom-links a:hover {
+            color: #60a5fa;
+        }
+
+        .footer-contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-contact-item:first-child {
+            margin-top: 0;
+        }
+
+        .footer-contact-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .footer-contact-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(59, 130, 246, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #60a5fa;
+            flex-shrink: 0;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .footer-contact-item a {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .footer-contact-item a:hover {
+            color: #60a5fa;
+        }
+
+        .footer-contact-item a::before {
+            display: none !important;
+        }
+
+        .footer-contact-item div {
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        .footer-hours-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 1.5rem;
+        }
+
+        .footer-hours-item:first-child {
+            padding-top: 0;
+        }
+
+        .footer-hours-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .footer-hours-item span {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .footer-hours-item strong {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: right;
         }
 
         @media (max-width: 1024px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 3rem 2.5rem;
+                padding: 0 1.5rem;
+            }
+
+            .footer-col-brand {
+                padding-right: 0;
+            }
+
             #cartLayout.cart-content {
                 grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .cart-shell {
+                padding: 0 1.25rem;
             }
 
             .cart-summary {
                 position: static;
                 align-self: auto;
+                padding: 2rem;
             }
 
             .cart-header {
-                padding: 2.5rem;
+                padding: 2rem;
+            }
+
+            .checkout-progress {
+                padding: 1.5rem;
+                gap: 1rem;
             }
 
             .cart-progress {
                 grid-template-columns: repeat(3, 1fr);
             }
+
+            .cart-item {
+                padding: 1.75rem;
+                gap: 1.25rem;
+            }
+
+            .checkout-btn {
+                font-size: 1rem;
+                padding: 1rem 2rem;
+            }
         }
 
         @media (max-width: 768px) {
+            .footer {
+                padding: 3rem 0 0;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+                padding: 0 1.25rem;
+            }
+
+            .footer-col h3 {
+                font-size: 1.5rem;
+            }
+
+            .footer-col h4 {
+                font-size: 0.95rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .footer-logo-img {
+                max-width: 160px;
+                max-height: 55px;
+            }
+
+            .footer-bottom {
+                margin-top: 2.5rem;
+            }
+
+            .footer-bottom-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 0 1.25rem;
+            }
+
+            .footer-bottom-links {
+                justify-content: center;
+                gap: 1.5rem;
+            }
+
+            .cart-shell {
+                padding: 0 1rem;
+            }
+
             .cart-header {
-                padding: 2.25rem 1.75rem;
+                padding: 1.75rem 1.5rem;
+                border-radius: 12px;
+            }
+
+            .cart-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .checkout-progress {
+                padding: 1.25rem;
+                margin-bottom: 2rem;
+                gap: 0.75rem;
+                border-radius: 12px;
             }
 
             .cart-progress {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 0.5rem;
+                gap: 0.75rem;
             }
 
             .cart-progress .step {
-                padding: 1rem 0.75rem;
+                padding: 0.875rem 0.625rem;
             }
 
             .step-marker {
                 width: 40px;
                 height: 40px;
-                font-size: 1rem;
+                font-size: 0.95rem;
             }
 
             .step-title {
@@ -710,19 +1094,32 @@ $page_title = "Shopping Cart | " . $site_name;
 
             .step-caption {
                 font-size: 0.68rem;
-                letter-spacing: 0.1em;
+                letter-spacing: 0.08em;
             }
 
             .cart-item {
-                grid-template-columns: 80px minmax(0, 1fr);
+                grid-template-columns: 90px minmax(0, 1fr);
                 padding: 1.5rem;
                 gap: 1rem;
+                border-radius: 12px;
             }
 
             .item-image {
-                width: 80px;
-                height: 80px;
-                border-radius: 12px;
+                width: 90px;
+                height: 90px;
+                border-radius: 10px;
+            }
+
+            .item-info {
+                min-width: 0;
+            }
+
+            .item-name {
+                font-size: 1rem;
+            }
+
+            .item-price {
+                font-size: 1.125rem;
             }
 
             .item-actions {
@@ -730,68 +1127,254 @@ $page_title = "Shopping Cart | " . $site_name;
                 flex-direction: row;
                 align-items: center;
                 justify-content: space-between;
+                gap: 1rem;
+                margin-top: 0.5rem;
+            }
+
+            .quantity-control {
+                margin: 0;
             }
 
             .item-total {
                 text-align: left;
+                margin-top: 0;
             }
 
             .item-header {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .cart-summary {
+                padding: 1.75rem;
+                border-radius: 16px;
+            }
+
+            .summary-title {
+                font-size: 1.25rem;
+            }
+
+            .checkout-btn {
+                padding: 1rem 1.5rem;
+                font-size: 0.95rem;
+            }
+
+            .continue-shopping {
+                font-size: 0.9rem;
             }
         }
 
         @media (max-width: 540px) {
             .cart-shell {
-                padding: 0 1rem;
+                padding: 0 0.875rem;
             }
 
             .cart-header {
-                padding: 2rem 1.5rem;
+                padding: 1.5rem 1.25rem;
+                border-radius: 10px;
+            }
+
+            .cart-header h1 {
+                font-size: 1.5rem;
+                line-height: 1.3;
+            }
+
+            .cart-header-subtitle {
+                font-size: 0.875rem;
+            }
+
+            .checkout-progress {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+                gap: 0.5rem;
+                border-radius: 10px;
+            }
+
+            .checkout-progress .step {
+                min-width: 120px;
             }
 
             .cart-progress {
                 grid-template-columns: 1fr;
-                margin: 1.75rem -1.5rem 0;
-                width: calc(100% + 3rem);
-                padding: 1rem 1.25rem;
+                gap: 0.75rem;
+                padding: 0.875rem;
             }
 
             .step-marker {
-                width: 42px;
-                height: 42px;
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
             }
 
             .step-title {
-                font-size: 0.9rem;
+                font-size: 0.9375rem;
+            }
+
+            .step-caption {
+                font-size: 0.7rem;
             }
 
             .cart-item {
                 grid-template-columns: 1fr;
                 padding: 1.25rem;
+                gap: 1rem;
+                border-radius: 10px;
             }
 
             .item-image {
                 width: 100%;
-                height: 180px;
+                height: 200px;
+                border-radius: 8px;
+                object-fit: cover;
+            }
+
+            .item-info {
+                width: 100%;
+            }
+
+            .item-name {
+                font-size: 1.0625rem;
+            }
+
+            .item-price {
+                font-size: 1.25rem;
+                margin-top: 0.5rem;
+            }
+
+            .item-meta {
+                font-size: 0.8125rem;
             }
 
             .item-actions {
-                align-items: flex-start;
-                flex-direction: column-reverse;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .quantity-control {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .quantity-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.125rem;
+            }
+
+            .quantity-value {
+                font-size: 1rem;
+                min-width: 50px;
             }
 
             .remove-btn {
-                align-self: flex-end;
+                width: 100%;
+                padding: 0.875rem;
+                font-size: 0.9rem;
+            }
+
+            .item-total {
+                text-align: center;
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid #e2e8f0;
+            }
+
+            .item-total .label {
+                font-size: 0.875rem;
+            }
+
+            .item-total .value {
+                font-size: 1.375rem;
+            }
+
+            .cart-summary {
+                padding: 1.5rem;
+                border-radius: 12px;
+            }
+
+            .summary-title {
+                font-size: 1.125rem;
+            }
+
+            .summary-totals .summary-row {
+                font-size: 0.9375rem;
+            }
+
+            .summary-totals .total-row {
+                font-size: 1.125rem;
+            }
+
+            .checkout-btn {
+                padding: 1.125rem 1.25rem;
+                font-size: 1rem;
+                border-radius: 10px;
+            }
+
+            .continue-shopping {
+                font-size: 0.875rem;
+                padding: 0.75rem;
+            }
+
+            .support-card {
+                padding: 1rem;
+                font-size: 0.875rem;
+            }
+
+            .empty-cart-message h2 {
+                font-size: 1.5rem;
+            }
+
+            .empty-cart-message p {
+                font-size: 0.9375rem;
             }
 
             .currency-tabs {
                 grid-template-columns: 1fr;
+                gap: 0.5rem;
             }
 
             .item-header {
                 width: 100%;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 375px) {
+            .cart-shell {
+                padding: 0 0.75rem;
+            }
+
+            .cart-header {
+                padding: 1.25rem 1rem;
+            }
+
+            .cart-header h1 {
+                font-size: 1.375rem;
+            }
+
+            .checkout-progress {
+                padding: 0.875rem;
+            }
+
+            .cart-item {
+                padding: 1rem;
+            }
+
+            .item-image {
+                height: 180px;
+            }
+
+            .cart-summary {
+                padding: 1.25rem;
+            }
+
+            .checkout-btn {
+                padding: 1rem;
+                font-size: 0.9375rem;
             }
         }
     </style>
@@ -802,63 +1385,65 @@ $page_title = "Shopping Cart | " . $site_name;
     <!-- Cart Page -->
     <section class="cart-page">
         <div class="cart-shell">
+            <!-- 5-Step Checkout Progress -->
+            <ul class="checkout-progress">
+                <li class="step active" data-step="1">
+                    <div class="step-marker">
+                        <span class="step-number">1</span>
+                        <span class="step-icon">✓</span>
+                    </div>
+                    <div class="step-labels">
+                        <span class="step-title">Shopping Cart</span>
+                        <span class="step-caption">Review items</span>
+                    </div>
+                </li>
+                <li class="step" data-step="2">
+                    <div class="step-marker">
+                        <span class="step-number">2</span>
+                        <span class="step-icon">✓</span>
+                    </div>
+                    <div class="step-labels">
+                        <span class="step-title">Information</span>
+                        <span class="step-caption">Customer details</span>
+                    </div>
+                </li>
+                <li class="step" data-step="3">
+                    <div class="step-marker">
+                        <span class="step-number">3</span>
+                        <span class="step-icon">✓</span>
+                    </div>
+                    <div class="step-labels">
+                        <span class="step-title">Shipping</span>
+                        <span class="step-caption">Delivery address</span>
+                    </div>
+                </li>
+                <li class="step" data-step="4">
+                    <div class="step-marker">
+                        <span class="step-number">4</span>
+                        <span class="step-icon">✓</span>
+                    </div>
+                    <div class="step-labels">
+                        <span class="step-title">Payment</span>
+                        <span class="step-caption">Secure checkout</span>
+                    </div>
+                </li>
+                <li class="step" data-step="5">
+                    <div class="step-marker">
+                        <span class="step-number">5</span>
+                        <span class="step-icon">✓</span>
+                    </div>
+                    <div class="step-labels">
+                        <span class="step-title">Complete</span>
+                        <span class="step-caption">Order confirmed</span>
+                    </div>
+                </li>
+            </ul>
+            
             <div class="cart-header">
                 <span class="cart-kicker">Shopping Cart</span>
                 <h1>Review your order</h1>
                 <p class="cart-header-subtitle">Real-time totals for Kenya and Tanzania markets.</p>
                 <p class="cart-header-count">You currently have <?php echo $itemCount; ?> item<?php echo $itemCount != 1 ? 's' : ''; ?> in your bag.</p>
-                <ul class="checkout-progress">
-                    <li class="step active" data-step="1">
-                        <div class="step-marker">
-                            <span class="step-number">1</span>
-                            <span class="step-icon">✓</span>
-                        </div>
-                        <div class="step-labels">
-                            <span class="step-title">Shopping Cart</span>
-                            <span class="step-caption">Review items</span>
-                        </div>
-                    </li>
-                    <li class="step" data-step="2">
-                        <div class="step-marker">
-                            <span class="step-number">2</span>
-                            <span class="step-icon">✓</span>
-                        </div>
-                        <div class="step-labels">
-                            <span class="step-title">Information</span>
-                            <span class="step-caption">Customer details</span>
-                        </div>
-                    </li>
-                    <li class="step" data-step="3">
-                        <div class="step-marker">
-                            <span class="step-number">3</span>
-                            <span class="step-icon">✓</span>
-                        </div>
-                        <div class="step-labels">
-                            <span class="step-title">Shipping</span>
-                            <span class="step-caption">Delivery address</span>
-                        </div>
-                    </li>
-                    <li class="step" data-step="4">
-                        <div class="step-marker">
-                            <span class="step-number">4</span>
-                            <span class="step-icon">✓</span>
-                        </div>
-                        <div class="step-labels">
-                            <span class="step-title">Payment</span>
-                            <span class="step-caption">Secure checkout</span>
-                        </div>
-                    </li>
-                    <li class="step" data-step="5">
-                        <div class="step-marker">
-                            <span class="step-number">5</span>
-                            <span class="step-icon">✓</span>
-                        </div>
-                        <div class="step-labels">
-                            <span class="step-title">Complete</span>
-                            <span class="step-caption">Order confirmed</span>
-                        </div>
-                    </li>
-                </ul>
             </div>
 
             <div class="cart-alerts">
@@ -920,8 +1505,10 @@ $page_title = "Shopping Cart | " . $site_name;
                                     </span>
                                 </div>
                                 <div class="item-price">
-                                    <span class="price-kes" data-currency-price="kes">KES <?php echo number_format($item['price_kes'], 0); ?></span>
-                                    <span class="price-tzs" data-currency-price="tzs" style="display: none;">TZS <?php echo number_format($item['price_tzs'], 0); ?></span>
+                                    <?php 
+                                    $itemPrice = $currencyDetector->getPrice($item['price_kes'], $currentCurrency);
+                                    ?>
+                                    <span class="price"><?php echo $currencyDetector->formatPrice($itemPrice, $currentCurrency); ?></span>
                                 </div>
                                 <div class="item-quantity">
                                     <span class="quantity-label">Quantity</span>
@@ -936,11 +1523,8 @@ $page_title = "Shopping Cart | " . $site_name;
                             <div class="item-actions">
                                 <div class="item-total">
                                     <div class="item-total-label">Item total</div>
-                                    <div class="item-total-price currency-kes" data-currency-total="kes">
-                                        KES <?php echo number_format($item['price_kes'] * $item['quantity'], 0); ?>
-                                    </div>
-                                    <div class="item-total-price currency-tzs" data-currency-total="tzs" style="display: none;">
-                                        TZS <?php echo number_format($item['price_tzs'] * $item['quantity'], 0); ?>
+                                    <div class="item-total-price">
+                                        <?php echo $currencyDetector->formatPrice($itemPrice * $item['quantity'], $currentCurrency); ?>
                                     </div>
                                 </div>
                                 <button class="remove-btn" data-product-id="<?php echo $productId; ?>">Remove</button>
@@ -950,40 +1534,20 @@ $page_title = "Shopping Cart | " . $site_name;
                 </div>
 
                 <aside class="cart-summary">
-                    <h2 class="summary-title">Order summary</h2>
+                    <h2 class="summary-title">Order summary (<?php echo $currentCurrency; ?>)</h2>
 
-                    <div class="currency-tabs">
-                        <div class="currency-tab active" data-currency="kes">KES (Kenya)</div>
-                        <div class="currency-tab" data-currency="tzs">TZS (Tanzania)</div>
-                    </div>
-
-                    <div class="summary-totals currency-kes" data-summary-group="kes">
+                    <div class="summary-totals">
                         <div class="summary-row subtotal">
                             <span>Subtotal</span>
-                            <strong class="summary-value" data-summary="kes-subtotal">KES <?php echo number_format($totals['kes']['subtotal'], 0); ?></strong>
+                            <strong class="summary-value"><?php echo $currencyDetector->formatPrice($totals['subtotal'], $currentCurrency); ?></strong>
                         </div>
                         <div class="summary-row tax">
-                            <span>Tax (16%)</span>
-                            <span class="summary-value" data-summary="kes-tax">KES <?php echo number_format($totals['kes']['tax'], 0); ?></span>
+                            <span>Tax (<?php echo ($totals['tax_rate'] * 100); ?>%)</span>
+                            <span class="summary-value"><?php echo $currencyDetector->formatPrice($totals['tax'], $currentCurrency); ?></span>
                         </div>
                         <div class="summary-row total">
                             <span>Total</span>
-                            <strong class="summary-value" data-summary="kes-total">KES <?php echo number_format($totals['kes']['total'], 0); ?></strong>
-                        </div>
-                    </div>
-
-                    <div class="summary-totals currency-tzs" data-summary-group="tzs" style="display: none;">
-                        <div class="summary-row subtotal">
-                            <span>Subtotal</span>
-                            <strong class="summary-value" data-summary="tzs-subtotal">TZS <?php echo number_format($totals['tzs']['subtotal'], 0); ?></strong>
-                        </div>
-                        <div class="summary-row tax">
-                            <span>Tax (18%)</span>
-                            <span class="summary-value" data-summary="tzs-tax">TZS <?php echo number_format($totals['tzs']['tax'], 0); ?></span>
-                        </div>
-                        <div class="summary-row total">
-                            <span>Total</span>
-                            <strong class="summary-value" data-summary="tzs-total">TZS <?php echo number_format($totals['tzs']['total'], 0); ?></strong>
+                            <strong class="summary-value"><?php echo $currencyDetector->formatPrice($totals['total'], $currentCurrency); ?></strong>
                         </div>
                     </div>
 
@@ -1003,36 +1567,7 @@ $page_title = "Shopping Cart | " . $site_name;
         </div>
     </section>
 
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <div class="footer-columns">
-                <div class="footer-col">
-                    <h3>ProCut Solutions</h3>
-                    <p>Professional printing equipment supplier serving Kenya and Tanzania.</p>
-                </div>
-                <div class="footer-col">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="products.php">Products</a></li>
-                        <li><a href="cart.php">Cart</a></li>
-                        <li><a href="index.php#contact">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li>Tanzania: <a href="tel:+255753098911">+255 753 098 911</a></li>
-                        <li>Kenya: <a href="tel:+254716522828">+254 716 522 828</a></li>
-                        <li><a href="mailto:support@procutsolutions.com">support@procutsolutions.com</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> ProCut Solutions. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <?php include 'includes/footer.php'; ?>
 
     <script>
         const cartInitialData = <?php echo json_encode([
