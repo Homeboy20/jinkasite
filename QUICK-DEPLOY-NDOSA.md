@@ -44,7 +44,7 @@ nano .env
 # Update REQUIRED fields:
 DB_NAME=ndosa_store
 DB_USER=ndosa_user
-DB_PASS=your_database_password
+DB_PASS=egT4kbWgcNhTW24TYeV5
 SECRET_KEY=generate_random_64_chars
 ENCRYPTION_KEY=generate_random_32_chars
 SITE_URL=https://ndosa.store
