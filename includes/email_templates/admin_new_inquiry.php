@@ -34,7 +34,7 @@
 </div>
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="http://<?= $_SERVER['HTTP_HOST'] ?>/jinkaplotterwebsite/admin/inquiries.php?view=<?= $inquiry_id ?>" class="button">
+    <a href="<?= rtrim(SITE_URL, '/') ?>/admin/inquiries.php?view=<?= $inquiry_id ?>" class="button">
         View & Reply in Admin Panel
     </a>
 </div>

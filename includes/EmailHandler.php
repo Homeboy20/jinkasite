@@ -176,7 +176,7 @@ class EmailHandler {
             'product_sku' => $product['sku'],
             'current_stock' => $product['stock_quantity'],
             'threshold' => $product['low_stock_threshold'] ?? 10,
-            'product_url' => "http://{$_SERVER['HTTP_HOST']}/jinkaplotterwebsite/admin/products.php?edit={$product['id']}"
+            'product_url' => SITE_URL . "/admin/products.php?edit={$product['id']}"
         ]);
         
         return $this->send($to, $subject, $message);
@@ -189,7 +189,7 @@ class EmailHandler {
         $to = $email;
         $subject = "Password Reset Request";
         
-        $resetUrl = "http://{$_SERVER['HTTP_HOST']}/jinkaplotterwebsite/admin/reset-password.php?token={$resetToken}";
+        $resetUrl = SITE_URL . "/admin/reset-password.php?token={$resetToken}";
         
         $message = $this->getEmailTemplate('password_reset', [
             'user_name' => $userName,

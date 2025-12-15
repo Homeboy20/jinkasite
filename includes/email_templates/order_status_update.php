@@ -26,7 +26,7 @@
 </table>
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="http://<?= $_SERVER['HTTP_HOST'] ?>/jinkaplotterwebsite/track-order.php?order=<?= $order_id ?>" class="button">
+    <a href="<?= rtrim(SITE_URL, '/') ?>/track-order.php?order=<?= $order_id ?>" class="button">
         Track Your Order
     </a>
 </div>

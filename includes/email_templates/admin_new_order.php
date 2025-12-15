@@ -64,7 +64,7 @@
 <p><?= ucfirst(str_replace('_', ' ', $payment_method)) ?></p>
 
 <div style="text-align: center; margin: 30px 0;">
-    <a href="http://<?= $_SERVER['HTTP_HOST'] ?>/jinkaplotterwebsite/admin/orders.php?view=<?= $order_id ?>" class="button">
+    <a href="<?= rtrim(SITE_URL, '/') ?>/admin/orders.php?view=<?= $order_id ?>" class="button">
         View Order in Admin Panel
     </a>
 </div>
