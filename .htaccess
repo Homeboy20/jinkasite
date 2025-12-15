@@ -5,7 +5,8 @@
 # ENABLE REWRITE ENGINE
 # ============================================
 RewriteEngine On
-RewriteBase /jinkaplotterwebsite/
+# RewriteBase /jinkaplotterwebsite/  # For local WAMP
+RewriteBase /  # For production
 
 # ============================================
 # GZIP COMPRESSION
@@ -138,13 +139,13 @@ RewriteRule ^(.+?)/?$ $1.php [L]
 # ============================================
 # FORCE HTTPS (Enable in production)
 # ============================================
-# <IfModule mod_rewrite.c>
-#     RewriteCond %{HTTP_HOST} !^localhost$ [NC]
-#     RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$ [NC]
-#     RewriteCond %{HTTP_HOST} !^192\.168\.[0-9\.]+$ [NC]
-#     RewriteCond %{HTTPS} off
-#     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-# </IfModule>
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_HOST} !^localhost$ [NC]
+    RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$ [NC]
+    RewriteCond %{HTTP_HOST} !^192\.168\.[0-9\.]+$ [NC]
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
 
 # ============================================
 # PROTECT SENSITIVE FILES & DIRECTORIES
