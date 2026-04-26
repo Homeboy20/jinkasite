@@ -292,8 +292,10 @@ if [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ ! -f "$MIGRATED_MARKER" ]; then
         database/add-performance-indexes.sql; do
         if [ -f "$f" ]; then
             echo "[entrypoint] Importing $f"
-            sed -e '/^CREATE DATABASE/d' -e '/^USE /d' "$f" \
-                | mysql --ssl=0 -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+            sed -e '/^CREATE DATABASE/d' -e '/^USE /d' \
+                -e '/^START TRANSACTION/d' -e '/^COMMIT/d' "$f" \
+                | mysql --ssl=0 --force -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+                2>&1 | sed "s/^/    [$f] /" \
                 || echo "[entrypoint] (non-fatal error in $f, continuing)"
         fi
     done
