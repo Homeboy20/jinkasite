@@ -5,8 +5,9 @@
 # ENABLE REWRITE ENGINE
 # ============================================
 RewriteEngine On
-# RewriteBase /jinkaplotterwebsite/  # For local WAMP
-RewriteBase /  # For production
+# RewriteBase /jinkaplotterwebsite/  (local WAMP only)
+# Production: RewriteBase /
+RewriteBase /
 
 # ============================================
 # GZIP COMPRESSION
