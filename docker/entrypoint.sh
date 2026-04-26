@@ -119,6 +119,61 @@ if (DEBUG_MODE) {
     ini_set('display_errors', '0');
     ini_set('log_errors', '1');
 }
+
+// ---------------------------------------------------------------------------
+// Database singleton (MySQLi). Originally lived in a gitignored config file;
+// recreated here so the app boots in a clean container.
+// ---------------------------------------------------------------------------
+class Database {
+    private static $instance = null;
+    private $conn;
+
+    private function __construct() {
+        mysqli_report(MYSQLI_REPORT_OFF);
+        $this->conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        if ($this->conn->connect_error) {
+            error_log('DB connect failed: ' . $this->conn->connect_error);
+            throw new RuntimeException('Database connection failed');
+        }
+        $this->conn->set_charset(DB_CHARSET);
+    }
+
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    public function getConnection() {
+        return $this->conn;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// site_setting(): read a row from the `settings` table, with a default.
+// Cached per-request to avoid hammering the DB.
+// ---------------------------------------------------------------------------
+if (!function_exists('site_setting')) {
+    function site_setting($key, $default = '') {
+        static $cache = null;
+        if ($cache === null) {
+            $cache = [];
+            try {
+                $db = Database::getInstance()->getConnection();
+                $res = @$db->query('SELECT setting_key, setting_value FROM settings');
+                if ($res) {
+                    while ($row = $res->fetch_assoc()) {
+                        $cache[$row['setting_key']] = $row['setting_value'];
+                    }
+                }
+            } catch (Throwable $e) {
+                error_log('site_setting load failed: ' . $e->getMessage());
+            }
+        }
+        return array_key_exists($key, $cache) ? $cache[$key] : $default;
+    }
+}
 PHP
 
 chown www-data:www-data "$CONFIG_FILE"
