@@ -172,6 +172,28 @@ class Database {
 // site_setting(): read a row from the `settings` table, with a default.
 // Cached per-request to avoid hammering the DB.
 // ---------------------------------------------------------------------------
+if (!function_exists('normalize_product_image_url')) {
+    function normalize_product_image_url($source, array $options = []) {
+        $fallback = $options['fallback'] ?? '';
+        $absolute = !empty($options['absolute']);
+        $url = trim((string)$source);
+        if ($url === '') {
+            $url = $fallback;
+        }
+        if ($url === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $url)) {
+            return $url;
+        }
+        $url = ltrim($url, '/');
+        if ($absolute) {
+            return rtrim(SITE_URL, '/') . '/' . $url;
+        }
+        return $url;
+    }
+}
+
 if (!function_exists('site_setting')) {
     function site_setting($key, $default = '') {
         static $cache = null;
