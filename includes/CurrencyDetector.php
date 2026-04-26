@@ -328,11 +328,16 @@ class CurrencyDetector {
         try {
             $db = Database::getInstance()->getConnection();
             $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+            if (!$stmt) {
+                error_log('CurrencyDetector: prepare() failed: ' . $db->error);
+                return $default;
+            }
             $stmt->bind_param('s', $key);
             $stmt->execute();
             $result = $stmt->get_result()->fetch_assoc();
             return $result ? $result['setting_value'] : $default;
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
+            error_log('CurrencyDetector::getSettingValue(' . $key . ') failed: ' . $e->getMessage());
             return $default;
         }
     }
