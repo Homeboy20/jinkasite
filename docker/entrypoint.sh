@@ -131,4 +131,47 @@ for d in uploads cache logs; do
     chmod -R 775 "/var/www/html/$d"
 done
 
+# One-shot DB migration. Marker lives in the logs volume so it survives redeploys.
+MIGRATED_MARKER=/var/www/html/logs/.migrated
+if [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ ! -f "$MIGRATED_MARKER" ]; then
+    echo "[entrypoint] Running first-boot DB migration..."
+    # Wait for MySQL to be reachable
+    for i in $(seq 1 30); do
+        if mysqladmin ping -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
+            break
+        fi
+        echo "[entrypoint] Waiting for MySQL ($i/30)..."
+        sleep 2
+    done
+
+    cd /var/www/html
+    # schema.sql contains stray CREATE DATABASE / USE statements pointing at a
+    # different db name; strip them so it imports into $DB_NAME.
+    for f in \
+        database/schema.sql \
+        database/create-customer-tables.sql \
+        database/create-order-items-table.sql \
+        database/create_deliveries_table.sql \
+        database/support_system.sql \
+        database/theme_settings.sql \
+        database/product_relationships.sql \
+        database/add-firebase-auth-fields.sql \
+        database/add-phone-verification.sql \
+        database/add_mpesa_fields.sql \
+        database/add-indexes-safe.sql \
+        database/add-performance-indexes.sql; do
+        if [ -f "$f" ]; then
+            echo "[entrypoint] Importing $f"
+            sed -e '/^CREATE DATABASE/d' -e '/^USE /d' "$f" \
+                | mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+                || echo "[entrypoint] (non-fatal error in $f, continuing)"
+        fi
+    done
+    touch "$MIGRATED_MARKER"
+    chown www-data:www-data "$MIGRATED_MARKER"
+    echo "[entrypoint] Migration complete."
+else
+    [ -f "$MIGRATED_MARKER" ] && echo "[entrypoint] DB already migrated, skipping."
+fi
+
 exec "$@"
