@@ -133,11 +133,16 @@ done
 
 # One-shot DB migration. Marker lives in the logs volume so it survives redeploys.
 MIGRATED_MARKER=/var/www/html/logs/.migrated
+# If a previous boot touched the marker but the import actually failed (e.g. TLS),
+# the FORCE_MIGRATE env var lets us redo it.
+if [ "${FORCE_MIGRATE:-0}" = "1" ]; then
+    rm -f "$MIGRATED_MARKER"
+fi
 if [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ ! -f "$MIGRATED_MARKER" ]; then
     echo "[entrypoint] Running first-boot DB migration..."
     # Wait for MySQL to be reachable
     for i in $(seq 1 30); do
-        if mysqladmin ping -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
+        if mysqladmin --ssl=0 ping -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
             break
         fi
         echo "[entrypoint] Waiting for MySQL ($i/30)..."
@@ -163,7 +168,7 @@ if [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ ! -f "$MIGRATED_MARKER" ]; then
         if [ -f "$f" ]; then
             echo "[entrypoint] Importing $f"
             sed -e '/^CREATE DATABASE/d' -e '/^USE /d' "$f" \
-                | mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+                | mysql --ssl=0 -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" \
                 || echo "[entrypoint] (non-fatal error in $f, continuing)"
         fi
     done
