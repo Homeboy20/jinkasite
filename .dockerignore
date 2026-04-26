@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+*.md
+!README.md
+docs/
+node_modules/
+.vscode/
+.idea/
+*.log
+*.bak
+*.old
+*.tmp
+includes/config.php
+.env
+.env.local
+deploy-ndosa.sh
