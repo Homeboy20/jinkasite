@@ -172,6 +172,36 @@ class Database {
 // site_setting(): read a row from the `settings` table, with a default.
 // Cached per-request to avoid hammering the DB.
 // ---------------------------------------------------------------------------
+if (!function_exists('site_url')) {
+    function site_url($path = '') {
+        $base = rtrim(SITE_URL, '/');
+        if ($path === '' || $path === null) {
+            return $base . '/';
+        }
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+        return $base . '/' . ltrim($path, '/');
+    }
+}
+
+if (!function_exists('current_url')) {
+    function current_url() {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+            ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? parse_url(SITE_URL, PHP_URL_HOST);
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        return $scheme . '://' . $host . $uri;
+    }
+}
+
+if (!function_exists('esc_html')) {
+    function esc_html($value) {
+        return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+}
+
 if (!function_exists('normalize_product_image_url')) {
     function normalize_product_image_url($source, array $options = []) {
         $fallback = $options['fallback'] ?? '';
