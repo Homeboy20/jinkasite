@@ -121,6 +121,24 @@ if (DEBUG_MODE) {
 }
 
 // ---------------------------------------------------------------------------
+// Class autoloader: load any class from /var/www/html/includes/<Name>.php.
+// The original config (gitignored) presumably did the same.
+// ---------------------------------------------------------------------------
+spl_autoload_register(function ($class) {
+    $base = __DIR__; // .../includes
+    $candidates = [
+        $base . '/' . $class . '.php',
+        $base . '/payments/' . $class . '.php',
+    ];
+    foreach ($candidates as $file) {
+        if (is_file($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
+
+// ---------------------------------------------------------------------------
 // Database singleton (MySQLi). Originally lived in a gitignored config file;
 // recreated here so the app boots in a clean container.
 // ---------------------------------------------------------------------------
