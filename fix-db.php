@@ -51,25 +51,30 @@ foreach ($files as $file) {
     }
     echo "=== $file ===\n";
     $sql = file_get_contents($path);
-    // Strip transactional bits and DB switching
-    $sql = preg_replace('/^\s*(CREATE\s+DATABASE|USE\s|START\s+TRANSACTION|COMMIT\b).*?;\s*$/im', '', $sql);
+    // Strip CREATE DATABASE / USE / transaction wrappers (target the configured DB instead)
+    $sql = preg_replace('/^\s*CREATE\s+DATABASE[^;]*;\s*$/im', '', $sql);
+    $sql = preg_replace('/^\s*USE\s+[^;]*;\s*$/im', '', $sql);
+    $sql = preg_replace('/^\s*START\s+TRANSACTION\s*;\s*$/im', '', $sql);
+    $sql = preg_replace('/^\s*COMMIT\s*;\s*$/im', '', $sql);
 
-    // Split on semicolons at end of line (naive but works for these files)
-    $statements = preg_split('/;\s*[\r\n]+/', $sql);
-    $ok = 0; $fail = 0;
-    foreach ($statements as $stmt) {
-        $stmt = trim($stmt);
-        if ($stmt === '' || preg_match('/^--/', $stmt)) continue;
-        if (!@$db->query($stmt)) {
-            $fail++;
-            $first_line = strtok($stmt, "\n");
-            echo "  ERR: " . $db->error . "\n";
-            echo "       at: " . substr($first_line, 0, 100) . "\n";
-        } else {
+    $ok = 0; $fail = 0; $errs = [];
+    if ($db->multi_query($sql)) {
+        do {
             $ok++;
-        }
+            // Drain any result set so the next statement can run
+            if ($res = $db->store_result()) { $res->free(); }
+        } while ($db->more_results() && ($more = $db->next_result()) !== false ? true : false);
     }
-    echo "  -> $ok ok, $fail failed\n\n";
+    // After multi_query, surface any errors at the connection level
+    while ($db->errno) {
+        $fail++;
+        $errs[] = $db->error;
+        if (!$db->more_results()) break;
+        $db->next_result();
+    }
+    echo "  -> $ok statements ran, $fail errors\n";
+    foreach (array_slice($errs, 0, 5) as $e) echo "     ERR: $e\n";
+    echo "\n";
 }
 
 echo "=== Tables AFTER ===\n";
