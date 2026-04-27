@@ -22,6 +22,38 @@ $db = Database::getInstance()->getConnection();
 echo "DB host: " . DB_HOST . "\n";
 echo "DB name: " . DB_NAME . "\n\n";
 
+// One-off remediation: complete-deployment.sql defined product_images
+// with image_url/display_order/is_primary but the rest of the app uses
+// image_path/sort_order/is_featured (per admin/setup_product_gallery.php).
+// If the table exists but has the wrong shape and is empty, drop and recreate.
+$res = @$db->query("SHOW COLUMNS FROM product_images LIKE 'image_url'");
+if ($res && $res->num_rows > 0) {
+    $cnt = $db->query("SELECT COUNT(*) c FROM product_images")->fetch_assoc()['c'] ?? 0;
+    if ((int)$cnt === 0) {
+        echo "[remediate] product_images has wrong schema (image_url) and is empty — recreating\n";
+        $db->query("DROP TABLE product_images");
+        $db->query("CREATE TABLE `product_images` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `product_id` int(11) NOT NULL,
+          `image_path` varchar(255) NOT NULL,
+          `is_featured` tinyint(1) DEFAULT 0,
+          `sort_order` int(11) DEFAULT 0,
+          `alt_text` varchar(255) DEFAULT NULL,
+          `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          KEY `product_id` (`product_id`),
+          KEY `is_featured` (`is_featured`),
+          KEY `sort_order` (`sort_order`),
+          CONSTRAINT `product_images_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        if ($db->error) echo "[remediate] ERR: " . $db->error . "\n";
+        else echo "[remediate] product_images recreated\n";
+    } else {
+        echo "[remediate] product_images has wrong schema but contains $cnt rows — left alone\n";
+    }
+}
+echo "\n";
+
 // List tables before
 echo "=== Tables BEFORE ===\n";
 $res = $db->query("SHOW TABLES");
