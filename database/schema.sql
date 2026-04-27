@@ -125,7 +125,6 @@ CREATE TABLE `customers` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`),
   KEY `idx_phone` (`phone`),
   KEY `idx_country` (`country`),
   KEY `idx_customer_type` (`customer_type`)
@@ -160,7 +159,6 @@ CREATE TABLE `orders` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `order_number` (`order_number`),
   KEY `idx_customer_id` (`customer_id`),
   KEY `idx_status` (`status`),
   KEY `idx_payment_status` (`payment_status`),
@@ -217,7 +215,6 @@ CREATE TABLE `quotes` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `quote_number` (`quote_number`),
   KEY `idx_customer_id` (`customer_id`),
   KEY `idx_status` (`status`),
   KEY `idx_valid_until` (`valid_until`),
@@ -294,7 +291,6 @@ CREATE TABLE `settings` (
   `is_public` tinyint(1) DEFAULT 0,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `setting_key` (`setting_key`),
   KEY `idx_group_name` (`group_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
