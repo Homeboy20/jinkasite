@@ -559,10 +559,18 @@ $category_count = count($category_cards);
                     <!-- CTAs -->
                     <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
                         <?php if ($hero_product_id): ?>
-                            <button class="btn btn-primary btn-lg" id="heroAddToCart"
+                            <button class="btn btn-primary btn-lg" id="heroBuyNow"
                                 data-product-id="<?php echo (int)$hero_product_id; ?>"
                                 data-product-name="<?php echo htmlspecialchars($hero_product_name, ENT_QUOTES); ?>"
+                                data-redirect="checkout"
                                 style="flex: 1; min-width: 200px; font-size: 1.125rem; padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 10px 25px rgba(255, 89, 0, 0.3); font-weight: 700; position: relative; overflow: hidden;">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                Buy Now
+                            </button>
+                            <button class="btn btn-outline btn-lg" id="heroAddToCart"
+                                data-product-id="<?php echo (int)$hero_product_id; ?>"
+                                data-product-name="<?php echo htmlspecialchars($hero_product_name, ENT_QUOTES); ?>"
+                                style="flex: 1; min-width: 180px; font-size: 1.125rem; padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; font-weight: 700; border: 2px solid #ff5900; color: #ff5900; background: white;">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
                                 Add to Cart
                             </button>
@@ -836,11 +844,19 @@ $category_count = count($category_cards);
                         Download Spec Sheet
                     </button>
                     <?php if ($hero_product_id): ?>
-                    <button class="btn btn-primary btn-pulse" id="specAddToCart"
+                    <button class="btn btn-primary btn-pulse btn-buy-now"
                         data-product-id="<?php echo (int)$hero_product_id; ?>"
-                        data-product-name="<?php echo htmlspecialchars($hero_product_name, ENT_QUOTES); ?>">
+                        data-product-name="<?php echo htmlspecialchars($hero_product_name, ENT_QUOTES); ?>"
+                        data-redirect="checkout">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Buy Now - <?php echo $hero_formatted_price; ?>
+                    </button>
+                    <button class="btn btn-outline" id="specAddToCart"
+                        data-product-id="<?php echo (int)$hero_product_id; ?>"
+                        data-product-name="<?php echo htmlspecialchars($hero_product_name, ENT_QUOTES); ?>"
+                        style="border: 2px solid #ff5900; color:#ff5900; background:#fff;">
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-                        Add to Cart - <?php echo $hero_formatted_price; ?>
+                        Add to Cart
                     </button>
                     <?php endif; ?>
                     <a href="https://wa.me/<?php echo htmlspecialchars($whatsapp_number_link); ?>?text=<?php echo urlencode('Hi, I need more information about the ' . $hero_product_name . ' specifications.'); ?>" 

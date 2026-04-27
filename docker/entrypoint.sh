@@ -398,8 +398,73 @@ if [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ ! -f "$MIGRATED_MARKER" ]; then
     touch "$MIGRATED_MARKER"
     chown www-data:www-data "$MIGRATED_MARKER"
     echo "[entrypoint] Migration complete."
+fi
+
+# ---------------------------------------------------------------------------
+# Seed: ensure the hero/anchor product exists so the homepage Buy buttons
+# render and a clean DB has at least one product to demo with.
+# ---------------------------------------------------------------------------
+SEED_MARKER=/var/www/html/logs/.seeded
+if [ "${FORCE_SEED:-0}" = "1" ]; then rm -f "$SEED_MARKER"; fi
+if [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ ! -f "$SEED_MARKER" ]; then
+    echo "[entrypoint] Seeding hero product (idempotent)..."
+    mysql --ssl=0 -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" 2>&1 <<'SQL' | sed 's/^/    [seed] /'
+INSERT IGNORE INTO categories (name, slug, description, is_active, sort_order)
+VALUES ('Vinyl Cutting Plotters', 'vinyl-cutting-plotters',
+        'Professional vinyl cutting plotters for sign makers and print shops.', 1, 1);
+
+INSERT IGNORE INTO products
+  (name, slug, sku, category_id, short_description, description,
+   specifications, features,
+   price_kes, price_tzs, stock_quantity,
+   is_featured, is_active, seo_title, seo_description, seo_keywords)
+SELECT
+  'JINKA PRO 1350 Cutting Plotter',
+  'jinka-pro-1350',
+  'JINKA-PRO-1350',
+  c.id,
+  '53-inch JINKA PRO 1350 vinyl cutting plotter with precision cutting, engineered for professional sign makers.',
+  'Meet the JINKA PRO 1350 — a 53-inch vinyl cutting plotter purpose-built for sign shops and branding studios across East Africa. Delivered with installation, calibration, and operator training so your team can start producing wraps, decals, signage, and apparel graphics immediately.',
+  JSON_OBJECT(
+    'cutting_width_mm', 1350,
+    'max_speed_mm_s', 800,
+    'cutting_force_g', 500,
+    'interface', 'USB 2.0, RS-232',
+    'power', '110V/220V 50/60Hz',
+    'weight_kg', 38,
+    'warranty_months', 12
+  ),
+  JSON_ARRAY(
+    'High precision cutting for professional results',
+    'Industrial stepper motor with dual pinch-roller tracking',
+    'CE-certified electronics with USB and RS-232 connectivity',
+    'Free installation, calibration, and operator training included',
+    '12-month manufacturer warranty plus local after-sales support'
+  ),
+  580000, 16568000, 12,
+  1, 1,
+  'JINKA PRO 1350 Cutting Plotter | 53-inch Vinyl Cutter',
+  'Buy the JINKA PRO 1350 — a 53-inch professional vinyl cutting plotter with installation, training, and warranty across Kenya & Tanzania.',
+  'JINKA PRO 1350, vinyl cutting plotter, sign making Kenya, sign making Tanzania, 53 inch cutter'
+FROM categories c
+WHERE c.slug = 'vinyl-cutting-plotters'
+  AND NOT EXISTS (SELECT 1 FROM products WHERE slug = 'jinka-pro-1350');
+
+INSERT IGNORE INTO settings (setting_key, setting_value, setting_type, group_name, is_public)
+VALUES
+  ('site_name',          'NDOSA STORE',                         'string',  'general', 1),
+  ('hero_product_slug',  'jinka-pro-1350',                      'string',  'home',    1),
+  ('business_email',     'info@ndosa.store',                    'string',  'contact', 1),
+  ('exchange_rate_kes',  '1',                                   'number',  'currency',1),
+  ('exchange_rate_tzs',  '2860',                                'number',  'currency',1),
+  ('exchange_rate_ugx',  '3900',                                'number',  'currency',1),
+  ('exchange_rate_usd',  '0.0077',                              'number',  'currency',1);
+SQL
+    touch "$SEED_MARKER"
+    chown www-data:www-data "$SEED_MARKER"
+    echo "[entrypoint] Seed complete."
 else
-    [ -f "$MIGRATED_MARKER" ] && echo "[entrypoint] DB already migrated, skipping."
+    [ -f "$SEED_MARKER" ] && echo "[entrypoint] DB already seeded, skipping."
 fi
 
 exec "$@"

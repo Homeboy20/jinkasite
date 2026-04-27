@@ -716,6 +716,27 @@ async function addToCart(productId, quantity = 1) {
     return await cart.addItem(productId, quantity);
 }
 
+// Buy Now: add to cart, then jump straight to checkout (skips the cart page).
+document.addEventListener('click', async function(e) {
+    const buy = e.target.closest('#heroBuyNow, .btn-buy-now');
+    if (buy) {
+        e.preventDefault();
+        const productId = buy.getAttribute('data-product-id');
+        if (!productId) return;
+        buy.disabled = true;
+        buy.classList.add('loading');
+        const ok = await cart.addItem(productId, 1);
+        if (ok) {
+            const target = buy.getAttribute('data-redirect') === 'checkout' ? 'checkout.php' : 'cart.php';
+            window.location.href = target;
+        } else {
+            buy.disabled = false;
+            buy.classList.remove('loading');
+        }
+        return;
+    }
+});
+
 // Listen for hero add-to-cart
 document.addEventListener('click', async function(e) {
     // Check for hero button
