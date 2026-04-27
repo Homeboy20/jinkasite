@@ -30,6 +30,7 @@ echo "\n";
 
 $files = [
     'database/schema.sql',
+    'database/complete-deployment.sql',
     'database/create-customer-tables.sql',
     'database/create-order-items-table.sql',
     'database/create_deliveries_table.sql',
