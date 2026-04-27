@@ -20,8 +20,5 @@ Allow: /css/
 Allow: /js/
 Allow: /images/
 
-# Sitemap (dynamic XML sitemap)
-Sitemap: https://yourwebsite.com/sitemap.xml.php
-
-# Alternative for development
-# Sitemap: http://localhost/jinkaplotterwebsite/sitemap.xml.php
+# Sitemap (dynamic, generated from products in DB)
+Sitemap: https://ndosa.store/sitemap.xml

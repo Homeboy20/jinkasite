@@ -137,6 +137,9 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}\.php -f
 RewriteRule ^(.+?)/?$ $1.php [L]
 
+# Serve the dynamic XML sitemap at /sitemap.xml (the static file is a stub)
+RewriteRule ^sitemap\.xml$ /sitemap.php [L]
+
 # ============================================
 # FORCE HTTPS
 # ============================================
