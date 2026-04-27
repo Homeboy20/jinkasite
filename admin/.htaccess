@@ -21,9 +21,12 @@ Options -Indexes
     Deny from all
 </FilesMatch>
 
-# Force HTTPS
+# Force HTTPS — respect X-Forwarded-Proto so this works behind a
+# TLS-terminating proxy (Traefik / Coolify). Without this check,
+# %{HTTPS} is always "off" inside the container and the rule loops.
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>

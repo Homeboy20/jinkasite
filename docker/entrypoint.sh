@@ -172,6 +172,102 @@ class Database {
 // site_setting(): read a row from the `settings` table, with a default.
 // Cached per-request to avoid hammering the DB.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Security: CSRF, password hashing, input sanitisation. Used heavily by the
+// admin panel. Was in the gitignored config; rebuilt here.
+// ---------------------------------------------------------------------------
+if (!class_exists('Security')) {
+    class Security {
+        const CSRF_KEY = '_csrf_token';
+
+        public static function generateCSRFToken() {
+            if (session_status() !== PHP_SESSION_ACTIVE) @session_start();
+            if (empty($_SESSION[self::CSRF_KEY])) {
+                $_SESSION[self::CSRF_KEY] = bin2hex(random_bytes(32));
+            }
+            return $_SESSION[self::CSRF_KEY];
+        }
+
+        public static function verifyCSRFToken($token) {
+            if (session_status() !== PHP_SESSION_ACTIVE) @session_start();
+            return !empty($_SESSION[self::CSRF_KEY])
+                && is_string($token)
+                && hash_equals($_SESSION[self::CSRF_KEY], $token);
+        }
+
+        public static function hashPassword($password) {
+            return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+        }
+
+        public static function verifyPassword($password, $hash) {
+            return password_verify($password, $hash);
+        }
+
+        public static function sanitizeInput($value) {
+            if (is_array($value)) return array_map([self::class, 'sanitizeInput'], $value);
+            $value = (string)$value;
+            $value = trim($value);
+            // Strip control characters but keep newlines/tabs
+            $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value);
+            return $value;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Logger: lightweight structured logger writing to LOG_PATH/app.log.
+// ---------------------------------------------------------------------------
+if (!class_exists('Logger')) {
+    class Logger {
+        private static function write($level, $message, array $context = []) {
+            if (!defined('LOG_ENABLED') || !LOG_ENABLED) return;
+            $dir = defined('LOG_PATH') ? LOG_PATH : __DIR__ . '/../logs';
+            if (!is_dir($dir)) @mkdir($dir, 0775, true);
+            $line = sprintf(
+                "[%s] %s: %s %s\n",
+                date('Y-m-d H:i:s'),
+                strtoupper($level),
+                $message,
+                $context ? json_encode($context) : ''
+            );
+            @file_put_contents($dir . '/app.log', $line, FILE_APPEND | LOCK_EX);
+        }
+        public static function info($message, array $context = [])    { self::write('info',    $message, $context); }
+        public static function warning($message, array $context = []) { self::write('warning', $message, $context); }
+        public static function error($message, array $context = [])   { self::write('error',   $message, $context); }
+        public static function debug($message, array $context = [])   { self::write('debug',   $message, $context); }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// redirect(): admin/login.php and friends use redirect($path, $msg, $type)
+// to issue a Location header with an optional flash message.
+// ---------------------------------------------------------------------------
+if (!function_exists('redirect')) {
+    function redirect($path, $message = '', $type = 'info') {
+        if (session_status() !== PHP_SESSION_ACTIVE) @session_start();
+        if ($message !== '') {
+            $_SESSION['flash'] = ['message' => $message, 'type' => $type];
+        }
+        if (!headers_sent()) {
+            header('Location: ' . $path);
+        }
+        exit;
+    }
+}
+
+if (!function_exists('flash_get')) {
+    function flash_get() {
+        if (session_status() !== PHP_SESSION_ACTIVE) @session_start();
+        if (!empty($_SESSION['flash'])) {
+            $f = $_SESSION['flash'];
+            unset($_SESSION['flash']);
+            return $f;
+        }
+        return null;
+    }
+}
+
 if (!function_exists('site_url')) {
     function site_url($path = '') {
         $base = rtrim(SITE_URL, '/');
