@@ -57,23 +57,26 @@ foreach ($files as $file) {
     $sql = preg_replace('/^\s*START\s+TRANSACTION\s*;\s*$/im', '', $sql);
     $sql = preg_replace('/^\s*COMMIT\s*;\s*$/im', '', $sql);
 
+    // Strip -- line comments and /* ... */ block comments first.
+    $clean = preg_replace('!/\*.*?\*/!s', '', $sql);
+    $clean = preg_replace('/^\s*--.*$/m', '', $clean);
+
+    // Split on semicolon followed by end-of-line (handles multi-line CREATE TABLE).
+    $statements = preg_split('/;\s*(?:\r?\n|$)/', $clean);
     $ok = 0; $fail = 0; $errs = [];
-    if ($db->multi_query($sql)) {
-        do {
+    foreach ($statements as $stmt) {
+        $stmt = trim($stmt);
+        if ($stmt === '') continue;
+        if (@$db->query($stmt)) {
             $ok++;
-            // Drain any result set so the next statement can run
-            if ($res = $db->store_result()) { $res->free(); }
-        } while ($db->more_results() && ($more = $db->next_result()) !== false ? true : false);
-    }
-    // After multi_query, surface any errors at the connection level
-    while ($db->errno) {
-        $fail++;
-        $errs[] = $db->error;
-        if (!$db->more_results()) break;
-        $db->next_result();
+        } else {
+            $fail++;
+            $first = strtok($stmt, "\n");
+            $errs[] = $db->error . '  @ ' . substr($first, 0, 80);
+        }
     }
     echo "  -> $ok statements ran, $fail errors\n";
-    foreach (array_slice($errs, 0, 5) as $e) echo "     ERR: $e\n";
+    foreach (array_slice($errs, 0, 8) as $e) echo "     ERR: $e\n";
     echo "\n";
 }
 
